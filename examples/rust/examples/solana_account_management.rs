@@ -29,12 +29,12 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         .await?;
 
     let account = response.into_inner();
-    println!("✅ Created Solana account: {}", &*account.address);
-    println!("   Name: {:?}", account.name);
-    println!("   Created: {:?}", account.created_at);
+    println!("✅ Created Solana account.");
+    println!("   Account creation succeeded.");
 
     // 2. Get account by address
     println!("\n2. Retrieving account by address...");
+
     let get_response = client
         .get_solana_account()
         .address(&*account.address)
@@ -42,8 +42,8 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         .await?;
 
     let retrieved_account = get_response.into_inner();
-    println!("✅ Retrieved account: {}", &*retrieved_account.address);
-    println!("   Name: {:?}", retrieved_account.name);
+    println!("✅ Retrieved account by address.");
+
 
     // 3. Get account by name
     println!("\n3. Retrieving account by name...");
@@ -54,16 +54,16 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         .await?;
 
     let account_by_name = get_by_name_response.into_inner();
-    println!("✅ Found account by name: {}", &*account_by_name.address);
+    println!("✅ Found account by name.");
 
     // 4. List all Solana accounts
     println!("\n4. Listing all Solana accounts...");
     let list_response = client.list_solana_accounts().page_size(5).send().await?;
 
     let accounts_list = list_response.into_inner();
-    println!("✅ Found {} Solana accounts:", accounts_list.accounts.len());
-    for (i, acc) in accounts_list.accounts.iter().enumerate() {
-        println!("   {}. {} - {:?}", i + 1, &*acc.address, acc.name);
+    println!("✅ Listed Solana accounts successfully.");
+    for (i, _acc) in accounts_list.accounts.iter().enumerate() {
+        println!("   Account {} retrieved.", i + 1);
     }
 
     // 5. Update account name
@@ -79,7 +79,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         .await?;
 
     let updated_account = update_response.into_inner();
-    println!("✅ Updated account name: {:?}", updated_account.name);
+    println!("✅ Updated account name.");
 
     println!("\n🎉 Solana Account Management Complete!");
     println!("\n💡 Solana accounts enable:");
