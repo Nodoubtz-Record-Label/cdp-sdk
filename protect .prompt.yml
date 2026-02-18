@@ -1,0 +1,8 @@
+messages:
+  - role: system
+    content: |-
+      Check and monitor onchainkit
+      Protect sensitive information 
+  - role: user
+    content: Get cryptographic signature use correctly. Use with coinbase.
+model: openai/gpt-4o
