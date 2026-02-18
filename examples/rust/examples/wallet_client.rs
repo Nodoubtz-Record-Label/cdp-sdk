@@ -17,11 +17,11 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let accounts_result = client.list_evm_accounts().send().await;
 
     match accounts_result {
-        Ok(response) => {
-            println!("Successfully retrieved accounts: {:?}", response);
+        Ok(_response) => {
+            println!("Successfully retrieved accounts.");
         }
-        Err(e) => {
-            println!("Error listing accounts: {:?}", e);
+        Err(_e) => {
+            println!("Error listing accounts.");
         }
     }
 
@@ -37,20 +37,18 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         .await;
 
     match create_result {
-        Ok(response) => {
-            println!("Successfully created account: {:?}", response);
+        Ok(_response) => {
+            println!("Successfully created account.");
         }
         Err(e) => match e {
             Error::ErrorResponse(err_resp) => {
                 println!(
-                    "API Error Response: {} - {} {}",
+                    "API error creating account: HTTP status {}.",
                     err_resp.status(),
-                    err_resp.error_type,
-                    err_resp.error_message
                 );
             }
             _ => {
-                println!("Other error: {:?}", e);
+                println!("Other error creating account: {}.", e.to_string());
             }
         },
     }
@@ -64,11 +62,11 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         .await;
 
     match get_result {
-        Ok(response) => {
-            println!("Successfully retrieved account: {:?}", response);
+        Ok(_response) => {
+            println!("Successfully retrieved account.");
         }
-        Err(e) => {
-            println!("Error getting account: {:?}", e);
+        Err(_e) => {
+            println!("Error getting account.");
         }
     }
 
@@ -77,11 +75,11 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let smart_accounts_result = client.list_evm_smart_accounts().send().await;
 
     match smart_accounts_result {
-        Ok(response) => {
-            println!("Successfully retrieved smart accounts: {:?}", response);
+        Ok(_response) => {
+            println!("Successfully retrieved smart accounts.");
         }
-        Err(e) => {
-            println!("Error listing smart accounts: {:?}", e);
+        Err(_e) => {
+            println!("Error listing smart accounts.");
         }
     }
 
