@@ -1,0 +1,13 @@
+curl -X POST "https://ai-gateway.vercel.sh/v1/chat/completions" \
+-H "Authorization: Bearer $AI_GATEWAY_API_KEY" \
+-H "Content-Type: application/json" \
+-d '{
+  "model": "openai/gpt-5.2",
+  "messages": [
+    {
+      "role": "user",
+      "content": "Why is the sky blue?"
+    }
+  ],
+  "stream": false
+}'
