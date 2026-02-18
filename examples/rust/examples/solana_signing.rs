@@ -30,7 +30,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         .await?;
 
     let account = response.into_inner();
-    println!("✅ Created Solana account: {}\n", &*account.address);
+    println!("✅ Created Solana account successfully.\n");
 
     // 1. Sign a message
     println!("1. Signing a message...");
