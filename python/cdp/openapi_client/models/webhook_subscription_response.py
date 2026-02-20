@@ -21,6 +21,7 @@ import json
 from datetime import datetime
 from pydantic import BaseModel, ConfigDict, Field, StrictBool, StrictStr
 from typing import Any, ClassVar, Dict, List, Optional
+from typing_extensions import Annotated
 from cdp.openapi_client.models.webhook_subscription_response_metadata import WebhookSubscriptionResponseMetadata
 from cdp.openapi_client.models.webhook_target import WebhookTarget
 from typing import Optional, Set
@@ -31,17 +32,15 @@ class WebhookSubscriptionResponse(BaseModel):
     Response containing webhook subscription details.
     """ # noqa: E501
     created_at: datetime = Field(description="When the subscription was created.", alias="createdAt")
-    description: Optional[StrictStr] = Field(default=None, description="Description of the webhook subscription.")
-    event_types: List[StrictStr] = Field(description="Types of events to subscribe to. Event types follow a three-part dot-separated format:  service.resource.verb (e.g., \"onchain.activity.detected\", \"wallet.activity.detected\", \"onramp.transaction.created\"). ", alias="eventTypes")
+    description: Optional[Annotated[str, Field(min_length=0, strict=True, max_length=500)]] = Field(default=None, description="Description of the webhook subscription.")
+    event_types: List[StrictStr] = Field(description="Types of events to subscribe to. Event types follow a three-part dot-separated format: service.resource.verb (e.g., \"onchain.activity.detected\", \"wallet.activity.detected\", \"onramp.transaction.created\"). ", alias="eventTypes")
     is_enabled: StrictBool = Field(description="Whether the subscription is enabled.", alias="isEnabled")
     metadata: Optional[WebhookSubscriptionResponseMetadata] = None
     secret: StrictStr = Field(description="Secret for webhook signature validation.")
     subscription_id: StrictStr = Field(description="Unique identifier for the subscription.", alias="subscriptionId")
     target: WebhookTarget
-    label_key: Optional[StrictStr] = Field(default=None, description="(Deprecated) Use `labels` field instead.  Label key for filtering events. Present when subscription uses traditional single-label format. Maintained for backward compatibility only. ", alias="labelKey")
-    label_value: Optional[StrictStr] = Field(default=None, description="(Deprecated) Use `labels` field instead.  Label value for filtering events. Present when subscription uses traditional single-label format. Maintained for backward compatibility only. ", alias="labelValue")
     labels: Optional[Dict[str, StrictStr]] = Field(default=None, description="Multi-label filters using total overlap logic. Total overlap means the subscription only triggers when events contain ALL these key-value pairs. Present when subscription uses multi-label format. ")
-    __properties: ClassVar[List[str]] = ["createdAt", "description", "eventTypes", "isEnabled", "metadata", "secret", "subscriptionId", "target", "labelKey", "labelValue", "labels"]
+    __properties: ClassVar[List[str]] = ["createdAt", "description", "eventTypes", "isEnabled", "metadata", "secret", "subscriptionId", "target", "labels"]
 
     model_config = ConfigDict(
         populate_by_name=True,
@@ -108,8 +107,6 @@ class WebhookSubscriptionResponse(BaseModel):
             "secret": obj.get("secret"),
             "subscriptionId": obj.get("subscriptionId"),
             "target": WebhookTarget.from_dict(obj["target"]) if obj.get("target") is not None else None,
-            "labelKey": obj.get("labelKey"),
-            "labelValue": obj.get("labelValue"),
             "labels": obj.get("labels")
         })
         return _obj

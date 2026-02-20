@@ -9,6 +9,9 @@ import type {
   CreateEndUserOptions,
   ImportEndUserOptions,
   GetEndUserOptions,
+  AddEndUserEvmAccountOptions,
+  AddEndUserEvmSmartAccountOptions,
+  AddEndUserSolanaAccountOptions,
 } from "./endUser.types.js";
 import { APIError } from "../../openapi-client/errors.js";
 import { UserInputValidationError } from "../../errors.js";
@@ -32,6 +35,9 @@ vi.mock("../../openapi-client", () => {
       listEndUsers: vi.fn(),
       getEndUser: vi.fn(),
       importEndUser: vi.fn(),
+      addEndUserEvmAccount: vi.fn(),
+      addEndUserEvmSmartAccount: vi.fn(),
+      addEndUserSolanaAccount: vi.fn(),
     },
   };
 });
@@ -184,7 +190,10 @@ describe("EndUserClient", () => {
       expect(CdpOpenApiClient.validateEndUserAccessToken).toHaveBeenCalledWith({
         accessToken: validateAccessTokenOptions.accessToken,
       });
-      expect(result).toEqual(mockEndUser);
+      expect(result).toMatchObject(mockEndUser);
+      expect(typeof result.addEvmAccount).toBe("function");
+      expect(typeof result.addEvmSmartAccount).toBe("function");
+      expect(typeof result.addSolanaAccount).toBe("function");
     });
 
     it("return a validation error if the access token is invalid", async () => {
@@ -216,7 +225,10 @@ describe("EndUserClient", () => {
       const result = await client.getEndUser(getOptions);
 
       expect(CdpOpenApiClient.getEndUser).toHaveBeenCalledWith("test-user-id");
-      expect(result).toEqual(mockEndUser);
+      expect(result).toMatchObject(mockEndUser);
+      expect(typeof result.addEvmAccount).toBe("function");
+      expect(typeof result.addEvmSmartAccount).toBe("function");
+      expect(typeof result.addSolanaAccount).toBe("function");
     });
 
     it("should handle errors when getting an end user", async () => {
@@ -317,7 +329,10 @@ describe("EndUserClient", () => {
         encryptedPrivateKey: Buffer.from("encrypted-private-key").toString("base64"),
         keyType: "evm",
       });
-      expect(result).toEqual(mockEndUser);
+      expect(result).toMatchObject(mockEndUser);
+      expect(typeof result.addEvmAccount).toBe("function");
+      expect(typeof result.addEvmSmartAccount).toBe("function");
+      expect(typeof result.addSolanaAccount).toBe("function");
     });
 
     it("should import an end user with EVM private key (without 0x prefix)", async () => {
@@ -338,7 +353,10 @@ describe("EndUserClient", () => {
         encryptedPrivateKey: Buffer.from("encrypted-private-key").toString("base64"),
         keyType: "evm",
       });
-      expect(result).toEqual(mockEndUser);
+      expect(result).toMatchObject(mockEndUser);
+      expect(typeof result.addEvmAccount).toBe("function");
+      expect(typeof result.addEvmSmartAccount).toBe("function");
+      expect(typeof result.addSolanaAccount).toBe("function");
     });
 
     it("should import an end user with provided userId", async () => {
@@ -381,7 +399,10 @@ describe("EndUserClient", () => {
         encryptedPrivateKey: Buffer.from("encrypted-private-key").toString("base64"),
         keyType: "solana",
       });
-      expect(result).toEqual(mockEndUser);
+      expect(result).toMatchObject(mockEndUser);
+      expect(typeof result.addEvmAccount).toBe("function");
+      expect(typeof result.addEvmSmartAccount).toBe("function");
+      expect(typeof result.addSolanaAccount).toBe("function");
     });
 
     it("should import an end user with Solana private key (32-byte Uint8Array)", async () => {
@@ -403,7 +424,10 @@ describe("EndUserClient", () => {
         encryptedPrivateKey: Buffer.from("encrypted-private-key").toString("base64"),
         keyType: "solana",
       });
-      expect(result).toEqual(mockEndUser);
+      expect(result).toMatchObject(mockEndUser);
+      expect(typeof result.addEvmAccount).toBe("function");
+      expect(typeof result.addEvmSmartAccount).toBe("function");
+      expect(typeof result.addSolanaAccount).toBe("function");
     });
 
     it("should import an end user with Solana private key (64-byte Uint8Array, truncates to 32)", async () => {
@@ -430,7 +454,10 @@ describe("EndUserClient", () => {
         encryptedPrivateKey: Buffer.from("encrypted-private-key").toString("base64"),
         keyType: "solana",
       });
-      expect(result).toEqual(mockEndUser);
+      expect(result).toMatchObject(mockEndUser);
+      expect(typeof result.addEvmAccount).toBe("function");
+      expect(typeof result.addEvmSmartAccount).toBe("function");
+      expect(typeof result.addSolanaAccount).toBe("function");
     });
 
     it("should throw error for EVM private key that is not a string", async () => {
@@ -485,6 +512,233 @@ describe("EndUserClient", () => {
       ).mockRejectedValue(expectedError);
 
       await expect(client.importEndUser(importOptions)).rejects.toThrow(expectedError);
+    });
+  });
+
+  describe("addEndUserEvmAccount", () => {
+    const mockEvmAccountResult = {
+      evmAccount: {
+        address: "0x456",
+        createdAt: "2024-01-01T00:00:00Z",
+      },
+    };
+
+    it("should add an EVM account to an existing end user", async () => {
+      const options: AddEndUserEvmAccountOptions = {
+        userId: "test-user-id",
+      };
+      (
+        CdpOpenApiClient.addEndUserEvmAccount as MockedFunction<
+          typeof CdpOpenApiClient.addEndUserEvmAccount
+        >
+      ).mockResolvedValue(mockEvmAccountResult);
+
+      const result = await client.addEndUserEvmAccount(options);
+
+      expect(CdpOpenApiClient.addEndUserEvmAccount).toHaveBeenCalledWith("test-user-id", {});
+      expect(result).toEqual(mockEvmAccountResult);
+    });
+
+    it("should handle errors when adding an EVM account", async () => {
+      const options: AddEndUserEvmAccountOptions = {
+        userId: "test-user-id",
+      };
+      const expectedError = new APIError(404, "not_found", "End user not found");
+      (
+        CdpOpenApiClient.addEndUserEvmAccount as MockedFunction<
+          typeof CdpOpenApiClient.addEndUserEvmAccount
+        >
+      ).mockRejectedValue(expectedError);
+
+      await expect(client.addEndUserEvmAccount(options)).rejects.toThrow(expectedError);
+    });
+  });
+
+  describe("addEndUserEvmSmartAccount", () => {
+    const mockEvmSmartAccountResult = {
+      evmSmartAccount: {
+        address: "0x789",
+        ownerAddresses: ["0x456"],
+        createdAt: "2024-01-01T00:00:00Z",
+      },
+    };
+
+    it("should add an EVM smart account with spend permissions enabled", async () => {
+      const options: AddEndUserEvmSmartAccountOptions = {
+        userId: "test-user-id",
+        enableSpendPermissions: true,
+      };
+      (
+        CdpOpenApiClient.addEndUserEvmSmartAccount as MockedFunction<
+          typeof CdpOpenApiClient.addEndUserEvmSmartAccount
+        >
+      ).mockResolvedValue(mockEvmSmartAccountResult);
+
+      const result = await client.addEndUserEvmSmartAccount(options);
+
+      expect(CdpOpenApiClient.addEndUserEvmSmartAccount).toHaveBeenCalledWith("test-user-id", {
+        enableSpendPermissions: true,
+      });
+      expect(result).toEqual(mockEvmSmartAccountResult);
+    });
+
+    it("should add an EVM smart account with spend permissions disabled", async () => {
+      const options: AddEndUserEvmSmartAccountOptions = {
+        userId: "test-user-id",
+        enableSpendPermissions: false,
+      };
+      (
+        CdpOpenApiClient.addEndUserEvmSmartAccount as MockedFunction<
+          typeof CdpOpenApiClient.addEndUserEvmSmartAccount
+        >
+      ).mockResolvedValue(mockEvmSmartAccountResult);
+
+      const result = await client.addEndUserEvmSmartAccount(options);
+
+      expect(CdpOpenApiClient.addEndUserEvmSmartAccount).toHaveBeenCalledWith("test-user-id", {
+        enableSpendPermissions: false,
+      });
+      expect(result).toEqual(mockEvmSmartAccountResult);
+    });
+
+    it("should handle errors when adding an EVM smart account", async () => {
+      const options: AddEndUserEvmSmartAccountOptions = {
+        userId: "test-user-id",
+        enableSpendPermissions: true,
+      };
+      const expectedError = new APIError(404, "not_found", "End user not found");
+      (
+        CdpOpenApiClient.addEndUserEvmSmartAccount as MockedFunction<
+          typeof CdpOpenApiClient.addEndUserEvmSmartAccount
+        >
+      ).mockRejectedValue(expectedError);
+
+      await expect(client.addEndUserEvmSmartAccount(options)).rejects.toThrow(expectedError);
+    });
+  });
+
+  describe("addEndUserSolanaAccount", () => {
+    const mockSolanaAccountResult = {
+      solanaAccount: {
+        address: "solana123",
+        createdAt: "2024-01-01T00:00:00Z",
+      },
+    };
+
+    it("should add a Solana account to an existing end user", async () => {
+      const options: AddEndUserSolanaAccountOptions = {
+        userId: "test-user-id",
+      };
+      (
+        CdpOpenApiClient.addEndUserSolanaAccount as MockedFunction<
+          typeof CdpOpenApiClient.addEndUserSolanaAccount
+        >
+      ).mockResolvedValue(mockSolanaAccountResult);
+
+      const result = await client.addEndUserSolanaAccount(options);
+
+      expect(CdpOpenApiClient.addEndUserSolanaAccount).toHaveBeenCalledWith("test-user-id", {});
+      expect(result).toEqual(mockSolanaAccountResult);
+    });
+
+    it("should handle errors when adding a Solana account", async () => {
+      const options: AddEndUserSolanaAccountOptions = {
+        userId: "test-user-id",
+      };
+      const expectedError = new APIError(404, "not_found", "End user not found");
+      (
+        CdpOpenApiClient.addEndUserSolanaAccount as MockedFunction<
+          typeof CdpOpenApiClient.addEndUserSolanaAccount
+        >
+      ).mockRejectedValue(expectedError);
+
+      await expect(client.addEndUserSolanaAccount(options)).rejects.toThrow(expectedError);
+    });
+  });
+
+  describe("EndUserAccount methods", () => {
+    const mockEvmAccountResult = {
+      evmAccount: {
+        address: "0x456",
+        createdAt: "2024-01-01T00:00:00Z",
+      },
+    };
+
+    const mockEvmSmartAccountResult = {
+      evmSmartAccount: {
+        address: "0x789",
+        ownerAddresses: ["0x456"],
+        createdAt: "2024-01-01T00:00:00Z",
+      },
+    };
+
+    const mockSolanaAccountResult = {
+      solanaAccount: {
+        address: "solana123",
+        createdAt: "2024-01-01T00:00:00Z",
+      },
+    };
+
+    it("should call addEvmAccount on EndUserAccount", async () => {
+      (
+        CdpOpenApiClient.createEndUser as MockedFunction<typeof CdpOpenApiClient.createEndUser>
+      ).mockResolvedValue(mockEndUser);
+      (
+        CdpOpenApiClient.addEndUserEvmAccount as MockedFunction<
+          typeof CdpOpenApiClient.addEndUserEvmAccount
+        >
+      ).mockResolvedValue(mockEvmAccountResult);
+
+      const endUser = await client.createEndUser({
+        authenticationMethods: [{ type: "email", email: "test@example.com" }],
+      });
+
+      const result = await endUser.addEvmAccount();
+
+      expect(CdpOpenApiClient.addEndUserEvmAccount).toHaveBeenCalledWith(mockEndUser.userId, {});
+      expect(result).toEqual(mockEvmAccountResult);
+    });
+
+    it("should call addEvmSmartAccount on EndUserAccount", async () => {
+      (
+        CdpOpenApiClient.createEndUser as MockedFunction<typeof CdpOpenApiClient.createEndUser>
+      ).mockResolvedValue(mockEndUser);
+      (
+        CdpOpenApiClient.addEndUserEvmSmartAccount as MockedFunction<
+          typeof CdpOpenApiClient.addEndUserEvmSmartAccount
+        >
+      ).mockResolvedValue(mockEvmSmartAccountResult);
+
+      const endUser = await client.createEndUser({
+        authenticationMethods: [{ type: "email", email: "test@example.com" }],
+      });
+
+      const result = await endUser.addEvmSmartAccount({ enableSpendPermissions: true });
+
+      expect(CdpOpenApiClient.addEndUserEvmSmartAccount).toHaveBeenCalledWith(mockEndUser.userId, {
+        enableSpendPermissions: true,
+      });
+      expect(result).toEqual(mockEvmSmartAccountResult);
+    });
+
+    it("should call addSolanaAccount on EndUserAccount", async () => {
+      (
+        CdpOpenApiClient.createEndUser as MockedFunction<typeof CdpOpenApiClient.createEndUser>
+      ).mockResolvedValue(mockEndUser);
+      (
+        CdpOpenApiClient.addEndUserSolanaAccount as MockedFunction<
+          typeof CdpOpenApiClient.addEndUserSolanaAccount
+        >
+      ).mockResolvedValue(mockSolanaAccountResult);
+
+      const endUser = await client.createEndUser({
+        authenticationMethods: [{ type: "email", email: "test@example.com" }],
+      });
+
+      const result = await endUser.addSolanaAccount();
+
+      expect(CdpOpenApiClient.addEndUserSolanaAccount).toHaveBeenCalledWith(mockEndUser.userId, {});
+      expect(result).toEqual(mockSolanaAccountResult);
     });
   });
 });

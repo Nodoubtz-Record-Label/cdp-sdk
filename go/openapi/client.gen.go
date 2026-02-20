@@ -85,8 +85,6 @@ const (
 	ErrorTypeMfaAlreadyEnrolled              ErrorType = "mfa_already_enrolled"
 	ErrorTypeMfaFlowExpired                  ErrorType = "mfa_flow_expired"
 	ErrorTypeMfaInvalidCode                  ErrorType = "mfa_invalid_code"
-	ErrorTypeMfaInvalidMethod                ErrorType = "mfa_invalid_method"
-	ErrorTypeMfaMultipleMethodsAvailable     ErrorType = "mfa_multiple_methods_available"
 	ErrorTypeMfaNotEnrolled                  ErrorType = "mfa_not_enrolled"
 	ErrorTypeMfaRequired                     ErrorType = "mfa_required"
 	ErrorTypeNetworkNotTradable              ErrorType = "network_not_tradable"
@@ -658,14 +656,19 @@ const (
 	X402SettleErrorReasonSettleExactNodeFailure                                                      X402SettleErrorReason = "settle_exact_node_failure"
 	X402SettleErrorReasonSettleExactSvmBlockHeightExceeded                                           X402SettleErrorReason = "settle_exact_svm_block_height_exceeded"
 	X402SettleErrorReasonSettleExactSvmTransactionConfirmationTimedOut                               X402SettleErrorReason = "settle_exact_svm_transaction_confirmation_timed_out"
+	X402SettleErrorReasonUnknownError                                                                X402SettleErrorReason = "unknown_error"
 )
 
 // Defines values for X402SupportedPaymentKindNetwork.
 const (
-	X402SupportedPaymentKindNetworkBase         X402SupportedPaymentKindNetwork = "base"
-	X402SupportedPaymentKindNetworkBaseSepolia  X402SupportedPaymentKindNetwork = "base-sepolia"
-	X402SupportedPaymentKindNetworkSolana       X402SupportedPaymentKindNetwork = "solana"
-	X402SupportedPaymentKindNetworkSolanaDevnet X402SupportedPaymentKindNetwork = "solana-devnet"
+	X402SupportedPaymentKindNetworkBase                                   X402SupportedPaymentKindNetwork = "base"
+	X402SupportedPaymentKindNetworkBaseSepolia                            X402SupportedPaymentKindNetwork = "base-sepolia"
+	X402SupportedPaymentKindNetworkEip1558453                             X402SupportedPaymentKindNetwork = "eip155:8453"
+	X402SupportedPaymentKindNetworkEip15584532                            X402SupportedPaymentKindNetwork = "eip155:84532"
+	X402SupportedPaymentKindNetworkSolana                                 X402SupportedPaymentKindNetwork = "solana"
+	X402SupportedPaymentKindNetworkSolana5eykt4UsFv8P8NJdTREpY1vzqKqZKvdp X402SupportedPaymentKindNetwork = "solana:5eykt4UsFv8P8NJdTREpY1vzqKqZKvdp"
+	X402SupportedPaymentKindNetworkSolanaDevnet                           X402SupportedPaymentKindNetwork = "solana-devnet"
+	X402SupportedPaymentKindNetworkSolanaEtWTRABZaYq6iMfeYKouRu166VU2xqa1 X402SupportedPaymentKindNetwork = "solana:EtWTRABZaYq6iMfeYKouRu166VU2xqa1"
 )
 
 // Defines values for X402SupportedPaymentKindScheme.
@@ -741,6 +744,7 @@ const (
 	X402VerifyInvalidReasonInvalidPaymentRequirements                                                  X402VerifyInvalidReason = "invalid_payment_requirements"
 	X402VerifyInvalidReasonInvalidScheme                                                               X402VerifyInvalidReason = "invalid_scheme"
 	X402VerifyInvalidReasonInvalidX402Version                                                          X402VerifyInvalidReason = "invalid_x402_version"
+	X402VerifyInvalidReasonUnknownError                                                                X402VerifyInvalidReason = "unknown_error"
 )
 
 // Defines values for ListTokensForAccountParamsNetwork.
@@ -899,6 +903,9 @@ type AuthenticationMethod struct {
 
 // AuthenticationMethods The list of valid authentication methods linked to the end user.
 type AuthenticationMethods = []AuthenticationMethod
+
+// BlockchainAddress A blockchain address. Format varies by network (e.g., 0x-prefixed for EVM, base58 for Solana).
+type BlockchainAddress = string
 
 // CommonSwapResponse defines model for CommonSwapResponse.
 type CommonSwapResponse struct {
@@ -1090,6 +1097,9 @@ type CreateSwapQuoteResponseLiquidityAvailable bool
 type CreateSwapQuoteResponseWrapper struct {
 	union json.RawMessage
 }
+
+// Description A human-readable description.
+type Description = string
 
 // DeveloperJWTAuthentication Information about an end user who authenticates using a JWT issued by the developer.
 type DeveloperJWTAuthentication struct {
@@ -1667,6 +1677,9 @@ type MFAMethods struct {
 	} `json:"totp,omitempty"`
 }
 
+// Metadata Optional metadata as key-value pairs. Use this to store additional structured information on a resource, such as customer IDs, order references, or any application-specific data. Up to 50 key/value pairs may be provided.  Keys and values are both strings. Keys must be ≤ 40 characters; values must be ≤ 500 characters.
+type Metadata map[string]string
+
 // MintAddressCriterion The criterion for the token mint addresses of a Solana transaction's SPL token transfer instructions.
 type MintAddressCriterion struct {
 	// Addresses The Solana addresses that are compared to the list of token mint addresses in the transaction's `accountKeys` (for legacy transactions) or `staticAccountKeys` (for V0 transactions) array.
@@ -1780,7 +1793,7 @@ type OnrampOrder struct {
 	CreatedAt string `json:"createdAt"`
 
 	// DestinationAddress The destination address to send the crypto to.
-	DestinationAddress string `json:"destinationAddress"`
+	DestinationAddress BlockchainAddress `json:"destinationAddress"`
 
 	// DestinationNetwork The network to send the crypto on.
 	DestinationNetwork string `json:"destinationNetwork"`
@@ -2653,63 +2666,35 @@ type WebhookSubscriptionListResponse struct {
 	Subscriptions []WebhookSubscriptionResponse `json:"subscriptions"`
 }
 
-// WebhookSubscriptionRequest Request to create a new webhook subscription with support for both traditional single-label
-// and multi-label filtering formats.
+// WebhookSubscriptionRequest Request to create a new webhook subscription with support for multi-label filtering.
 type WebhookSubscriptionRequest struct {
 	// Description Description of the webhook subscription.
-	Description *string `json:"description,omitempty"`
+	Description *Description `json:"description,omitempty"`
 
 	// EventTypes Types of events to subscribe to. Event types follow a three-part dot-separated format:
 	// service.resource.verb (e.g., "onchain.activity.detected", "wallet.activity.detected", "onramp.transaction.created").
 	// The subscription will only receive events matching these types AND the label filter(s).
-	EventTypes *[]string `json:"eventTypes,omitempty"`
+	EventTypes []string `json:"eventTypes"`
 
 	// IsEnabled Whether the subscription is enabled.
-	IsEnabled *bool `json:"isEnabled,omitempty"`
+	IsEnabled bool `json:"isEnabled"`
 
-	// LabelKey (Deprecated) Use `labels` instead for better filtering capabilities, including filtering on multiple labels simultaneously.
-	//
-	// Label key for filtering events. Each subscription filters on exactly one (labelKey, labelValue) pair
-	// in addition to the event types. Only events matching both the event types AND this label filter will be delivered.
-	// NOTE: Use either (labelKey + labelValue) OR labels, not both.
-	//
-	// Maintained for backward compatibility only.
-	// Deprecated:
-	LabelKey *string `json:"labelKey,omitempty"`
-
-	// LabelValue (Deprecated) Use `labels` instead for better filtering capabilities, including filtering on multiple labels simultaneously.
-	//
-	// Label value for filtering events. Must correspond to the labelKey (e.g., contract address for contract_address key).
-	// Only events with this exact label value will be delivered.
-	// NOTE: Use either (labelKey + labelValue) OR labels, not both.
-	//
-	// Maintained for backward compatibility only.
-	// Deprecated:
-	LabelValue *string `json:"labelValue,omitempty"`
-
-	// Labels Multi-label filters using total overlap logic. Total overlap means the subscription will only trigger when
+	// Labels Optional. Multi-label filters using total overlap logic. Total overlap means the subscription will only trigger when
 	// an event contains ALL the key-value pairs specified here. Additional labels on
-	// the event are allowed and will not prevent matching.
+	// the event are allowed and will not prevent matching. Omit to receive all events for the selected event types.
 	//
 	// **Note:** Currently, labels are supported for onchain webhooks only.
 	//
 	// See [allowed labels for onchain webhooks](https://docs.cdp.coinbase.com/api-reference/v2/rest-api/webhooks/create-webhook-subscription#onchain-label-filtering).
 	Labels *map[string]string `json:"labels,omitempty"`
 
-	// Metadata Additional metadata for the subscription.
-	Metadata *map[string]interface{} `json:"metadata,omitempty"`
+	// Metadata Optional metadata as key-value pairs. Use this to store additional structured information on a resource, such as customer IDs, order references, or any application-specific data. Up to 50 key/value pairs may be provided.  Keys and values are both strings. Keys must be ≤ 40 characters; values must be ≤ 500 characters.
+	Metadata *Metadata `json:"metadata,omitempty"`
 
 	// Target Target configuration for webhook delivery.
 	// Specifies the destination URL and any custom headers to include in webhook requests.
-	Target *WebhookTarget `json:"target,omitempty"`
-	union  json.RawMessage
+	Target WebhookTarget `json:"target"`
 }
-
-// WebhookSubscriptionRequest0 defines model for .
-type WebhookSubscriptionRequest0 = interface{}
-
-// WebhookSubscriptionRequest1 defines model for .
-type WebhookSubscriptionRequest1 = interface{}
 
 // WebhookSubscriptionResponse Response containing webhook subscription details.
 type WebhookSubscriptionResponse struct {
@@ -2717,7 +2702,7 @@ type WebhookSubscriptionResponse struct {
 	CreatedAt time.Time `json:"createdAt"`
 
 	// Description Description of the webhook subscription.
-	Description *string `json:"description,omitempty"`
+	Description *Description `json:"description,omitempty"`
 
 	// EventTypes Types of events to subscribe to. Event types follow a three-part dot-separated format:
 	// service.resource.verb (e.g., "onchain.activity.detected", "wallet.activity.detected", "onramp.transaction.created").
@@ -2726,30 +2711,12 @@ type WebhookSubscriptionResponse struct {
 	// IsEnabled Whether the subscription is enabled.
 	IsEnabled bool `json:"isEnabled"`
 
-	// LabelKey (Deprecated) Use `labels` field instead.
-	//
-	// Label key for filtering events. Present when subscription uses traditional single-label format.
-	// Maintained for backward compatibility only.
-	// Deprecated:
-	LabelKey *string `json:"labelKey,omitempty"`
-
-	// LabelValue (Deprecated) Use `labels` field instead.
-	//
-	// Label value for filtering events. Present when subscription uses traditional single-label format.
-	// Maintained for backward compatibility only.
-	// Deprecated:
-	LabelValue *string `json:"labelValue,omitempty"`
-
 	// Labels Multi-label filters using total overlap logic. Total overlap means the subscription only triggers when events contain ALL these key-value pairs.
 	// Present when subscription uses multi-label format.
 	Labels *map[string]string `json:"labels,omitempty"`
 
 	// Metadata Additional metadata for the subscription.
-	Metadata *struct {
-		// Secret Use the root-level `secret` field instead. Maintained for backward compatibility only.
-		// Deprecated:
-		Secret *openapi_types.UUID `json:"secret,omitempty"`
-	} `json:"metadata,omitempty"`
+	Metadata *WebhookSubscriptionResponse_Metadata `json:"metadata,omitempty"`
 
 	// Secret Secret for webhook signature validation.
 	Secret openapi_types.UUID `json:"secret"`
@@ -2762,54 +2729,41 @@ type WebhookSubscriptionResponse struct {
 	Target WebhookTarget `json:"target"`
 }
 
-// WebhookSubscriptionUpdateRequest Request to update an existing webhook subscription. The update format must match
-// the original subscription format (traditional or multi-label).
+// WebhookSubscriptionResponse_Metadata defines model for WebhookSubscriptionResponse.Metadata.
+type WebhookSubscriptionResponse_Metadata struct {
+	// Secret Use the root-level `secret` field instead. Maintained for backward compatibility only.
+	// Deprecated:
+	Secret               *openapi_types.UUID `json:"secret,omitempty"`
+	AdditionalProperties map[string]string   `json:"-"`
+}
+
+// WebhookSubscriptionUpdateRequest Request to update an existing webhook subscription.
 type WebhookSubscriptionUpdateRequest struct {
 	// Description Description of the webhook subscription.
-	Description *string `json:"description,omitempty"`
+	Description *Description `json:"description,omitempty"`
 
 	// EventTypes Types of events to subscribe to. Event types follow a three-part dot-separated format:
 	// service.resource.verb (e.g., "onchain.activity.detected", "wallet.activity.detected", "onramp.transaction.created").
-	EventTypes *[]string `json:"eventTypes,omitempty"`
+	EventTypes []string `json:"eventTypes"`
 
 	// IsEnabled Whether the subscription is enabled.
-	IsEnabled *bool `json:"isEnabled,omitempty"`
+	IsEnabled bool `json:"isEnabled"`
 
-	// LabelKey (Deprecated) Use `labels` instead for better filtering capabilities, including filtering on multiple labels simultaneously.
-	//
-	// Label key for filtering events. Use either (labelKey + labelValue) OR labels, not both.
-	// Maintained for backward compatibility only.
-	// Deprecated:
-	LabelKey *string `json:"labelKey,omitempty"`
-
-	// LabelValue (Deprecated) Use `labels` instead for better filtering capabilities, including filtering on multiple labels simultaneously.
-	//
-	// Label value for filtering events. Use either (labelKey + labelValue) OR labels, not both.
-	// Maintained for backward compatibility only.
-	// Deprecated:
-	LabelValue *string `json:"labelValue,omitempty"`
-
-	// Labels Multi-label filters that trigger only when an event contains ALL of these key-value pairs.
+	// Labels Optional. Multi-label filters that trigger only when an event contains ALL of these key-value pairs.
 	//
 	// **Note:** Currently, labels are supported for onchain webhooks only.
 	//
 	// See [allowed labels for onchain webhooks](https://docs.cdp.coinbase.com/api-reference/v2/rest-api/webhooks/create-webhook-subscription#onchain-label-filtering).
+	// Omit to receive all events for the selected event types.
 	Labels *map[string]string `json:"labels,omitempty"`
 
-	// Metadata Additional metadata for the subscription.
-	Metadata *map[string]interface{} `json:"metadata,omitempty"`
+	// Metadata Optional metadata as key-value pairs. Use this to store additional structured information on a resource, such as customer IDs, order references, or any application-specific data. Up to 50 key/value pairs may be provided.  Keys and values are both strings. Keys must be ≤ 40 characters; values must be ≤ 500 characters.
+	Metadata *Metadata `json:"metadata,omitempty"`
 
 	// Target Target configuration for webhook delivery.
 	// Specifies the destination URL and any custom headers to include in webhook requests.
-	Target *WebhookTarget `json:"target,omitempty"`
-	union  json.RawMessage
+	Target WebhookTarget `json:"target"`
 }
-
-// WebhookSubscriptionUpdateRequest0 defines model for .
-type WebhookSubscriptionUpdateRequest0 = interface{}
-
-// WebhookSubscriptionUpdateRequest1 defines model for .
-type WebhookSubscriptionUpdateRequest1 = interface{}
 
 // WebhookTarget Target configuration for webhook delivery.
 // Specifies the destination URL and any custom headers to include in webhook requests.
@@ -2890,8 +2844,8 @@ type X402PaymentRequirements struct {
 
 // X402ResourceInfo Describes the resource being accessed in x402 protocol.
 type X402ResourceInfo struct {
-	// Description The description of the resource.
-	Description *string `json:"description,omitempty"`
+	// Description A human-readable description of the resource.
+	Description *Description `json:"description,omitempty"`
 
 	// MimeType The MIME type of the resource response.
 	MimeType *string `json:"mimeType,omitempty"`
@@ -2905,6 +2859,9 @@ type X402SettleErrorReason string
 
 // X402SettlePaymentRejection The result when x402 payment settlement fails.
 type X402SettlePaymentRejection struct {
+	// ErrorMessage The message describing the error reason.
+	ErrorMessage *string `json:"errorMessage,omitempty"`
+
 	// ErrorReason The reason the payment settlement errored on the x402 protocol.
 	ErrorReason X402SettleErrorReason `json:"errorReason"`
 
@@ -2983,8 +2940,8 @@ type X402V1PaymentRequirements struct {
 	// For Solana-based networks, the asset will be a base58-encoded Solana address.
 	Asset string `json:"asset"`
 
-	// Description The description of the resource.
-	Description string `json:"description"`
+	// Description A human-readable description of the resource.
+	Description Description `json:"description"`
 
 	// Extra The optional additional scheme-specific payment info.
 	Extra *map[string]interface{} `json:"extra,omitempty"`
@@ -3087,6 +3044,9 @@ type X402VerifyInvalidReason string
 
 // X402VerifyPaymentRejection The result when x402 payment verification fails.
 type X402VerifyPaymentRejection struct {
+	// InvalidMessage The message describing the invalid reason.
+	InvalidMessage *string `json:"invalidMessage,omitempty"`
+
 	// InvalidReason The reason the payment is invalid on the x402 protocol.
 	InvalidReason X402VerifyInvalidReason `json:"invalidReason"`
 
@@ -3148,6 +3108,9 @@ type X402SettleError = X402SettlePaymentRejection
 
 // X402SettleResponse defines model for x402SettleResponse.
 type X402SettleResponse struct {
+	// ErrorMessage The message describing the error reason.
+	ErrorMessage *string `json:"errorMessage,omitempty"`
+
 	// ErrorReason The reason the payment settlement errored on the x402 protocol.
 	ErrorReason *X402SettleErrorReason `json:"errorReason,omitempty"`
 
@@ -3187,6 +3150,9 @@ type X402VerifyInvalidError = X402VerifyPaymentRejection
 
 // X402VerifyResponse defines model for x402VerifyResponse.
 type X402VerifyResponse struct {
+	// InvalidMessage The message describing the invalid reason.
+	InvalidMessage *string `json:"invalidMessage,omitempty"`
+
 	// InvalidReason The reason the payment is invalid on the x402 protocol.
 	InvalidReason *X402VerifyInvalidReason `json:"invalidReason,omitempty"`
 
@@ -3312,6 +3278,57 @@ type ImportEndUserParams struct {
 
 // ImportEndUserJSONBodyKeyType defines parameters for ImportEndUser.
 type ImportEndUserJSONBodyKeyType string
+
+// AddEndUserEvmAccountJSONBody defines parameters for AddEndUserEvmAccount.
+type AddEndUserEvmAccountJSONBody = map[string]interface{}
+
+// AddEndUserEvmAccountParams defines parameters for AddEndUserEvmAccount.
+type AddEndUserEvmAccountParams struct {
+	// XWalletAuth A JWT signed using your Wallet Secret, encoded in base64. Refer to the
+	// [Generate Wallet Token](https://docs.cdp.coinbase.com/api-reference/v2/authentication#2-generate-wallet-token)
+	// section of our Authentication docs for more details on how to generate your Wallet Token.
+	XWalletAuth *XWalletAuth `json:"X-Wallet-Auth,omitempty"`
+
+	// XIdempotencyKey An optional [UUID v4](https://www.uuidgenerator.net/version4) request header for making requests safely retryable.
+	// When included, duplicate requests with the same key will return identical responses.
+	// Refer to our [Idempotency docs](https://docs.cdp.coinbase.com/api-reference/v2/idempotency) for more information on using idempotency keys.
+	XIdempotencyKey *IdempotencyKey `json:"X-Idempotency-Key,omitempty"`
+}
+
+// AddEndUserEvmSmartAccountJSONBody defines parameters for AddEndUserEvmSmartAccount.
+type AddEndUserEvmSmartAccountJSONBody struct {
+	// EnableSpendPermissions If true, enables spend permissions for the EVM smart account.
+	EnableSpendPermissions *bool `json:"enableSpendPermissions,omitempty"`
+}
+
+// AddEndUserEvmSmartAccountParams defines parameters for AddEndUserEvmSmartAccount.
+type AddEndUserEvmSmartAccountParams struct {
+	// XWalletAuth A JWT signed using your Wallet Secret, encoded in base64. Refer to the
+	// [Generate Wallet Token](https://docs.cdp.coinbase.com/api-reference/v2/authentication#2-generate-wallet-token)
+	// section of our Authentication docs for more details on how to generate your Wallet Token.
+	XWalletAuth *XWalletAuth `json:"X-Wallet-Auth,omitempty"`
+
+	// XIdempotencyKey An optional [UUID v4](https://www.uuidgenerator.net/version4) request header for making requests safely retryable.
+	// When included, duplicate requests with the same key will return identical responses.
+	// Refer to our [Idempotency docs](https://docs.cdp.coinbase.com/api-reference/v2/idempotency) for more information on using idempotency keys.
+	XIdempotencyKey *IdempotencyKey `json:"X-Idempotency-Key,omitempty"`
+}
+
+// AddEndUserSolanaAccountJSONBody defines parameters for AddEndUserSolanaAccount.
+type AddEndUserSolanaAccountJSONBody = map[string]interface{}
+
+// AddEndUserSolanaAccountParams defines parameters for AddEndUserSolanaAccount.
+type AddEndUserSolanaAccountParams struct {
+	// XWalletAuth A JWT signed using your Wallet Secret, encoded in base64. Refer to the
+	// [Generate Wallet Token](https://docs.cdp.coinbase.com/api-reference/v2/authentication#2-generate-wallet-token)
+	// section of our Authentication docs for more details on how to generate your Wallet Token.
+	XWalletAuth *XWalletAuth `json:"X-Wallet-Auth,omitempty"`
+
+	// XIdempotencyKey An optional [UUID v4](https://www.uuidgenerator.net/version4) request header for making requests safely retryable.
+	// When included, duplicate requests with the same key will return identical responses.
+	// Refer to our [Idempotency docs](https://docs.cdp.coinbase.com/api-reference/v2/idempotency) for more information on using idempotency keys.
+	XIdempotencyKey *IdempotencyKey `json:"X-Idempotency-Key,omitempty"`
+}
 
 // ListEvmAccountsParams defines parameters for ListEvmAccounts.
 type ListEvmAccountsParams struct {
@@ -3725,7 +3742,7 @@ type CreateOnrampOrderJSONBody struct {
 	ClientIp *string `json:"clientIp,omitempty"`
 
 	// DestinationAddress The address the purchased crypto will be sent to.
-	DestinationAddress string `json:"destinationAddress"`
+	DestinationAddress BlockchainAddress `json:"destinationAddress"`
 
 	// DestinationNetwork The name of the crypto network the purchased currency will be sent on.
 	//
@@ -3784,7 +3801,7 @@ type CreateOnrampSessionJSONBody struct {
 	Country *string `json:"country,omitempty"`
 
 	// DestinationAddress The address the purchased crypto will be sent to.
-	DestinationAddress string `json:"destinationAddress"`
+	DestinationAddress BlockchainAddress `json:"destinationAddress"`
 
 	// DestinationNetwork The name of the crypto network the purchased currency will be sent on.
 	//
@@ -4124,6 +4141,15 @@ type ValidateEndUserAccessTokenJSONRequestBody ValidateEndUserAccessTokenJSONBod
 // ImportEndUserJSONRequestBody defines body for ImportEndUser for application/json ContentType.
 type ImportEndUserJSONRequestBody ImportEndUserJSONBody
 
+// AddEndUserEvmAccountJSONRequestBody defines body for AddEndUserEvmAccount for application/json ContentType.
+type AddEndUserEvmAccountJSONRequestBody = AddEndUserEvmAccountJSONBody
+
+// AddEndUserEvmSmartAccountJSONRequestBody defines body for AddEndUserEvmSmartAccount for application/json ContentType.
+type AddEndUserEvmSmartAccountJSONRequestBody AddEndUserEvmSmartAccountJSONBody
+
+// AddEndUserSolanaAccountJSONRequestBody defines body for AddEndUserSolanaAccount for application/json ContentType.
+type AddEndUserSolanaAccountJSONRequestBody = AddEndUserSolanaAccountJSONBody
+
 // CreateEvmAccountJSONRequestBody defines body for CreateEvmAccount for application/json ContentType.
 type CreateEvmAccountJSONRequestBody CreateEvmAccountJSONBody
 
@@ -4225,6 +4251,74 @@ type SettleX402PaymentJSONRequestBody SettleX402PaymentJSONBody
 
 // VerifyX402PaymentJSONRequestBody defines body for VerifyX402Payment for application/json ContentType.
 type VerifyX402PaymentJSONRequestBody VerifyX402PaymentJSONBody
+
+// Getter for additional properties for WebhookSubscriptionResponse_Metadata. Returns the specified
+// element and whether it was found
+func (a WebhookSubscriptionResponse_Metadata) Get(fieldName string) (value string, found bool) {
+	if a.AdditionalProperties != nil {
+		value, found = a.AdditionalProperties[fieldName]
+	}
+	return
+}
+
+// Setter for additional properties for WebhookSubscriptionResponse_Metadata
+func (a *WebhookSubscriptionResponse_Metadata) Set(fieldName string, value string) {
+	if a.AdditionalProperties == nil {
+		a.AdditionalProperties = make(map[string]string)
+	}
+	a.AdditionalProperties[fieldName] = value
+}
+
+// Override default JSON handling for WebhookSubscriptionResponse_Metadata to handle AdditionalProperties
+func (a *WebhookSubscriptionResponse_Metadata) UnmarshalJSON(b []byte) error {
+	object := make(map[string]json.RawMessage)
+	err := json.Unmarshal(b, &object)
+	if err != nil {
+		return err
+	}
+
+	if raw, found := object["secret"]; found {
+		err = json.Unmarshal(raw, &a.Secret)
+		if err != nil {
+			return fmt.Errorf("error reading 'secret': %w", err)
+		}
+		delete(object, "secret")
+	}
+
+	if len(object) != 0 {
+		a.AdditionalProperties = make(map[string]string)
+		for fieldName, fieldBuf := range object {
+			var fieldVal string
+			err := json.Unmarshal(fieldBuf, &fieldVal)
+			if err != nil {
+				return fmt.Errorf("error unmarshaling field %s: %w", fieldName, err)
+			}
+			a.AdditionalProperties[fieldName] = fieldVal
+		}
+	}
+	return nil
+}
+
+// Override default JSON handling for WebhookSubscriptionResponse_Metadata to handle AdditionalProperties
+func (a WebhookSubscriptionResponse_Metadata) MarshalJSON() ([]byte, error) {
+	var err error
+	object := make(map[string]json.RawMessage)
+
+	if a.Secret != nil {
+		object["secret"], err = json.Marshal(a.Secret)
+		if err != nil {
+			return nil, fmt.Errorf("error marshaling 'secret': %w", err)
+		}
+	}
+
+	for fieldName, field := range a.AdditionalProperties {
+		object[fieldName], err = json.Marshal(field)
+		if err != nil {
+			return nil, fmt.Errorf("error marshaling '%s': %w", fieldName, err)
+		}
+	}
+	return json.Marshal(object)
+}
 
 // AsAbiFunction returns the union data inside the Abi_Item as a AbiFunction
 func (t Abi_Item) AsAbiFunction() (AbiFunction, error) {
@@ -6184,394 +6278,6 @@ func (t *SolDataCriterion_Idls_Item) UnmarshalJSON(b []byte) error {
 	return err
 }
 
-// AsWebhookSubscriptionRequest0 returns the union data inside the WebhookSubscriptionRequest as a WebhookSubscriptionRequest0
-func (t WebhookSubscriptionRequest) AsWebhookSubscriptionRequest0() (WebhookSubscriptionRequest0, error) {
-	var body WebhookSubscriptionRequest0
-	err := json.Unmarshal(t.union, &body)
-	return body, err
-}
-
-// FromWebhookSubscriptionRequest0 overwrites any union data inside the WebhookSubscriptionRequest as the provided WebhookSubscriptionRequest0
-func (t *WebhookSubscriptionRequest) FromWebhookSubscriptionRequest0(v WebhookSubscriptionRequest0) error {
-	b, err := json.Marshal(v)
-	t.union = b
-	return err
-}
-
-// MergeWebhookSubscriptionRequest0 performs a merge with any union data inside the WebhookSubscriptionRequest, using the provided WebhookSubscriptionRequest0
-func (t *WebhookSubscriptionRequest) MergeWebhookSubscriptionRequest0(v WebhookSubscriptionRequest0) error {
-	b, err := json.Marshal(v)
-	if err != nil {
-		return err
-	}
-
-	merged, err := runtime.JsonMerge(t.union, b)
-	t.union = merged
-	return err
-}
-
-// AsWebhookSubscriptionRequest1 returns the union data inside the WebhookSubscriptionRequest as a WebhookSubscriptionRequest1
-func (t WebhookSubscriptionRequest) AsWebhookSubscriptionRequest1() (WebhookSubscriptionRequest1, error) {
-	var body WebhookSubscriptionRequest1
-	err := json.Unmarshal(t.union, &body)
-	return body, err
-}
-
-// FromWebhookSubscriptionRequest1 overwrites any union data inside the WebhookSubscriptionRequest as the provided WebhookSubscriptionRequest1
-func (t *WebhookSubscriptionRequest) FromWebhookSubscriptionRequest1(v WebhookSubscriptionRequest1) error {
-	b, err := json.Marshal(v)
-	t.union = b
-	return err
-}
-
-// MergeWebhookSubscriptionRequest1 performs a merge with any union data inside the WebhookSubscriptionRequest, using the provided WebhookSubscriptionRequest1
-func (t *WebhookSubscriptionRequest) MergeWebhookSubscriptionRequest1(v WebhookSubscriptionRequest1) error {
-	b, err := json.Marshal(v)
-	if err != nil {
-		return err
-	}
-
-	merged, err := runtime.JsonMerge(t.union, b)
-	t.union = merged
-	return err
-}
-
-func (t WebhookSubscriptionRequest) MarshalJSON() ([]byte, error) {
-	b, err := t.union.MarshalJSON()
-	if err != nil {
-		return nil, err
-	}
-	object := make(map[string]json.RawMessage)
-	if t.union != nil {
-		err = json.Unmarshal(b, &object)
-		if err != nil {
-			return nil, err
-		}
-	}
-
-	if t.Description != nil {
-		object["description"], err = json.Marshal(t.Description)
-		if err != nil {
-			return nil, fmt.Errorf("error marshaling 'description': %w", err)
-		}
-	}
-
-	if t.EventTypes != nil {
-		object["eventTypes"], err = json.Marshal(t.EventTypes)
-		if err != nil {
-			return nil, fmt.Errorf("error marshaling 'eventTypes': %w", err)
-		}
-	}
-
-	if t.IsEnabled != nil {
-		object["isEnabled"], err = json.Marshal(t.IsEnabled)
-		if err != nil {
-			return nil, fmt.Errorf("error marshaling 'isEnabled': %w", err)
-		}
-	}
-
-	if t.LabelKey != nil {
-		object["labelKey"], err = json.Marshal(t.LabelKey)
-		if err != nil {
-			return nil, fmt.Errorf("error marshaling 'labelKey': %w", err)
-		}
-	}
-
-	if t.LabelValue != nil {
-		object["labelValue"], err = json.Marshal(t.LabelValue)
-		if err != nil {
-			return nil, fmt.Errorf("error marshaling 'labelValue': %w", err)
-		}
-	}
-
-	if t.Labels != nil {
-		object["labels"], err = json.Marshal(t.Labels)
-		if err != nil {
-			return nil, fmt.Errorf("error marshaling 'labels': %w", err)
-		}
-	}
-
-	if t.Metadata != nil {
-		object["metadata"], err = json.Marshal(t.Metadata)
-		if err != nil {
-			return nil, fmt.Errorf("error marshaling 'metadata': %w", err)
-		}
-	}
-
-	if t.Target != nil {
-		object["target"], err = json.Marshal(t.Target)
-		if err != nil {
-			return nil, fmt.Errorf("error marshaling 'target': %w", err)
-		}
-	}
-	b, err = json.Marshal(object)
-	return b, err
-}
-
-func (t *WebhookSubscriptionRequest) UnmarshalJSON(b []byte) error {
-	err := t.union.UnmarshalJSON(b)
-	if err != nil {
-		return err
-	}
-	object := make(map[string]json.RawMessage)
-	err = json.Unmarshal(b, &object)
-	if err != nil {
-		return err
-	}
-
-	if raw, found := object["description"]; found {
-		err = json.Unmarshal(raw, &t.Description)
-		if err != nil {
-			return fmt.Errorf("error reading 'description': %w", err)
-		}
-	}
-
-	if raw, found := object["eventTypes"]; found {
-		err = json.Unmarshal(raw, &t.EventTypes)
-		if err != nil {
-			return fmt.Errorf("error reading 'eventTypes': %w", err)
-		}
-	}
-
-	if raw, found := object["isEnabled"]; found {
-		err = json.Unmarshal(raw, &t.IsEnabled)
-		if err != nil {
-			return fmt.Errorf("error reading 'isEnabled': %w", err)
-		}
-	}
-
-	if raw, found := object["labelKey"]; found {
-		err = json.Unmarshal(raw, &t.LabelKey)
-		if err != nil {
-			return fmt.Errorf("error reading 'labelKey': %w", err)
-		}
-	}
-
-	if raw, found := object["labelValue"]; found {
-		err = json.Unmarshal(raw, &t.LabelValue)
-		if err != nil {
-			return fmt.Errorf("error reading 'labelValue': %w", err)
-		}
-	}
-
-	if raw, found := object["labels"]; found {
-		err = json.Unmarshal(raw, &t.Labels)
-		if err != nil {
-			return fmt.Errorf("error reading 'labels': %w", err)
-		}
-	}
-
-	if raw, found := object["metadata"]; found {
-		err = json.Unmarshal(raw, &t.Metadata)
-		if err != nil {
-			return fmt.Errorf("error reading 'metadata': %w", err)
-		}
-	}
-
-	if raw, found := object["target"]; found {
-		err = json.Unmarshal(raw, &t.Target)
-		if err != nil {
-			return fmt.Errorf("error reading 'target': %w", err)
-		}
-	}
-
-	return err
-}
-
-// AsWebhookSubscriptionUpdateRequest0 returns the union data inside the WebhookSubscriptionUpdateRequest as a WebhookSubscriptionUpdateRequest0
-func (t WebhookSubscriptionUpdateRequest) AsWebhookSubscriptionUpdateRequest0() (WebhookSubscriptionUpdateRequest0, error) {
-	var body WebhookSubscriptionUpdateRequest0
-	err := json.Unmarshal(t.union, &body)
-	return body, err
-}
-
-// FromWebhookSubscriptionUpdateRequest0 overwrites any union data inside the WebhookSubscriptionUpdateRequest as the provided WebhookSubscriptionUpdateRequest0
-func (t *WebhookSubscriptionUpdateRequest) FromWebhookSubscriptionUpdateRequest0(v WebhookSubscriptionUpdateRequest0) error {
-	b, err := json.Marshal(v)
-	t.union = b
-	return err
-}
-
-// MergeWebhookSubscriptionUpdateRequest0 performs a merge with any union data inside the WebhookSubscriptionUpdateRequest, using the provided WebhookSubscriptionUpdateRequest0
-func (t *WebhookSubscriptionUpdateRequest) MergeWebhookSubscriptionUpdateRequest0(v WebhookSubscriptionUpdateRequest0) error {
-	b, err := json.Marshal(v)
-	if err != nil {
-		return err
-	}
-
-	merged, err := runtime.JsonMerge(t.union, b)
-	t.union = merged
-	return err
-}
-
-// AsWebhookSubscriptionUpdateRequest1 returns the union data inside the WebhookSubscriptionUpdateRequest as a WebhookSubscriptionUpdateRequest1
-func (t WebhookSubscriptionUpdateRequest) AsWebhookSubscriptionUpdateRequest1() (WebhookSubscriptionUpdateRequest1, error) {
-	var body WebhookSubscriptionUpdateRequest1
-	err := json.Unmarshal(t.union, &body)
-	return body, err
-}
-
-// FromWebhookSubscriptionUpdateRequest1 overwrites any union data inside the WebhookSubscriptionUpdateRequest as the provided WebhookSubscriptionUpdateRequest1
-func (t *WebhookSubscriptionUpdateRequest) FromWebhookSubscriptionUpdateRequest1(v WebhookSubscriptionUpdateRequest1) error {
-	b, err := json.Marshal(v)
-	t.union = b
-	return err
-}
-
-// MergeWebhookSubscriptionUpdateRequest1 performs a merge with any union data inside the WebhookSubscriptionUpdateRequest, using the provided WebhookSubscriptionUpdateRequest1
-func (t *WebhookSubscriptionUpdateRequest) MergeWebhookSubscriptionUpdateRequest1(v WebhookSubscriptionUpdateRequest1) error {
-	b, err := json.Marshal(v)
-	if err != nil {
-		return err
-	}
-
-	merged, err := runtime.JsonMerge(t.union, b)
-	t.union = merged
-	return err
-}
-
-func (t WebhookSubscriptionUpdateRequest) MarshalJSON() ([]byte, error) {
-	b, err := t.union.MarshalJSON()
-	if err != nil {
-		return nil, err
-	}
-	object := make(map[string]json.RawMessage)
-	if t.union != nil {
-		err = json.Unmarshal(b, &object)
-		if err != nil {
-			return nil, err
-		}
-	}
-
-	if t.Description != nil {
-		object["description"], err = json.Marshal(t.Description)
-		if err != nil {
-			return nil, fmt.Errorf("error marshaling 'description': %w", err)
-		}
-	}
-
-	if t.EventTypes != nil {
-		object["eventTypes"], err = json.Marshal(t.EventTypes)
-		if err != nil {
-			return nil, fmt.Errorf("error marshaling 'eventTypes': %w", err)
-		}
-	}
-
-	if t.IsEnabled != nil {
-		object["isEnabled"], err = json.Marshal(t.IsEnabled)
-		if err != nil {
-			return nil, fmt.Errorf("error marshaling 'isEnabled': %w", err)
-		}
-	}
-
-	if t.LabelKey != nil {
-		object["labelKey"], err = json.Marshal(t.LabelKey)
-		if err != nil {
-			return nil, fmt.Errorf("error marshaling 'labelKey': %w", err)
-		}
-	}
-
-	if t.LabelValue != nil {
-		object["labelValue"], err = json.Marshal(t.LabelValue)
-		if err != nil {
-			return nil, fmt.Errorf("error marshaling 'labelValue': %w", err)
-		}
-	}
-
-	if t.Labels != nil {
-		object["labels"], err = json.Marshal(t.Labels)
-		if err != nil {
-			return nil, fmt.Errorf("error marshaling 'labels': %w", err)
-		}
-	}
-
-	if t.Metadata != nil {
-		object["metadata"], err = json.Marshal(t.Metadata)
-		if err != nil {
-			return nil, fmt.Errorf("error marshaling 'metadata': %w", err)
-		}
-	}
-
-	if t.Target != nil {
-		object["target"], err = json.Marshal(t.Target)
-		if err != nil {
-			return nil, fmt.Errorf("error marshaling 'target': %w", err)
-		}
-	}
-	b, err = json.Marshal(object)
-	return b, err
-}
-
-func (t *WebhookSubscriptionUpdateRequest) UnmarshalJSON(b []byte) error {
-	err := t.union.UnmarshalJSON(b)
-	if err != nil {
-		return err
-	}
-	object := make(map[string]json.RawMessage)
-	err = json.Unmarshal(b, &object)
-	if err != nil {
-		return err
-	}
-
-	if raw, found := object["description"]; found {
-		err = json.Unmarshal(raw, &t.Description)
-		if err != nil {
-			return fmt.Errorf("error reading 'description': %w", err)
-		}
-	}
-
-	if raw, found := object["eventTypes"]; found {
-		err = json.Unmarshal(raw, &t.EventTypes)
-		if err != nil {
-			return fmt.Errorf("error reading 'eventTypes': %w", err)
-		}
-	}
-
-	if raw, found := object["isEnabled"]; found {
-		err = json.Unmarshal(raw, &t.IsEnabled)
-		if err != nil {
-			return fmt.Errorf("error reading 'isEnabled': %w", err)
-		}
-	}
-
-	if raw, found := object["labelKey"]; found {
-		err = json.Unmarshal(raw, &t.LabelKey)
-		if err != nil {
-			return fmt.Errorf("error reading 'labelKey': %w", err)
-		}
-	}
-
-	if raw, found := object["labelValue"]; found {
-		err = json.Unmarshal(raw, &t.LabelValue)
-		if err != nil {
-			return fmt.Errorf("error reading 'labelValue': %w", err)
-		}
-	}
-
-	if raw, found := object["labels"]; found {
-		err = json.Unmarshal(raw, &t.Labels)
-		if err != nil {
-			return fmt.Errorf("error reading 'labels': %w", err)
-		}
-	}
-
-	if raw, found := object["metadata"]; found {
-		err = json.Unmarshal(raw, &t.Metadata)
-		if err != nil {
-			return fmt.Errorf("error reading 'metadata': %w", err)
-		}
-	}
-
-	if raw, found := object["target"]; found {
-		err = json.Unmarshal(raw, &t.Target)
-		if err != nil {
-			return fmt.Errorf("error reading 'target': %w", err)
-		}
-	}
-
-	return err
-}
-
 // AsX402V1PaymentPayload returns the union data inside the X402PaymentPayload as a X402V1PaymentPayload
 func (t X402PaymentPayload) AsX402V1PaymentPayload() (X402V1PaymentPayload, error) {
 	var body X402V1PaymentPayload
@@ -6946,6 +6652,21 @@ type ClientInterface interface {
 
 	// GetEndUser request
 	GetEndUser(ctx context.Context, userId string, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// AddEndUserEvmAccountWithBody request with any body
+	AddEndUserEvmAccountWithBody(ctx context.Context, userId string, params *AddEndUserEvmAccountParams, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	AddEndUserEvmAccount(ctx context.Context, userId string, params *AddEndUserEvmAccountParams, body AddEndUserEvmAccountJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// AddEndUserEvmSmartAccountWithBody request with any body
+	AddEndUserEvmSmartAccountWithBody(ctx context.Context, userId string, params *AddEndUserEvmSmartAccountParams, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	AddEndUserEvmSmartAccount(ctx context.Context, userId string, params *AddEndUserEvmSmartAccountParams, body AddEndUserEvmSmartAccountJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// AddEndUserSolanaAccountWithBody request with any body
+	AddEndUserSolanaAccountWithBody(ctx context.Context, userId string, params *AddEndUserSolanaAccountParams, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	AddEndUserSolanaAccount(ctx context.Context, userId string, params *AddEndUserSolanaAccountParams, body AddEndUserSolanaAccountJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
 
 	// ListEvmAccounts request
 	ListEvmAccounts(ctx context.Context, params *ListEvmAccountsParams, reqEditors ...RequestEditorFn) (*http.Response, error)
@@ -7405,6 +7126,78 @@ func (c *CDPClient) ImportEndUser(ctx context.Context, params *ImportEndUserPara
 
 func (c *CDPClient) GetEndUser(ctx context.Context, userId string, reqEditors ...RequestEditorFn) (*http.Response, error) {
 	req, err := NewGetEndUserRequest(c.Server, userId)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *CDPClient) AddEndUserEvmAccountWithBody(ctx context.Context, userId string, params *AddEndUserEvmAccountParams, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewAddEndUserEvmAccountRequestWithBody(c.Server, userId, params, contentType, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *CDPClient) AddEndUserEvmAccount(ctx context.Context, userId string, params *AddEndUserEvmAccountParams, body AddEndUserEvmAccountJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewAddEndUserEvmAccountRequest(c.Server, userId, params, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *CDPClient) AddEndUserEvmSmartAccountWithBody(ctx context.Context, userId string, params *AddEndUserEvmSmartAccountParams, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewAddEndUserEvmSmartAccountRequestWithBody(c.Server, userId, params, contentType, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *CDPClient) AddEndUserEvmSmartAccount(ctx context.Context, userId string, params *AddEndUserEvmSmartAccountParams, body AddEndUserEvmSmartAccountJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewAddEndUserEvmSmartAccountRequest(c.Server, userId, params, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *CDPClient) AddEndUserSolanaAccountWithBody(ctx context.Context, userId string, params *AddEndUserSolanaAccountParams, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewAddEndUserSolanaAccountRequestWithBody(c.Server, userId, params, contentType, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *CDPClient) AddEndUserSolanaAccount(ctx context.Context, userId string, params *AddEndUserSolanaAccountParams, body AddEndUserSolanaAccountJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewAddEndUserSolanaAccountRequest(c.Server, userId, params, body)
 	if err != nil {
 		return nil, err
 	}
@@ -9148,6 +8941,225 @@ func NewGetEndUserRequest(server string, userId string) (*http.Request, error) {
 	req, err := http.NewRequest("GET", queryURL.String(), nil)
 	if err != nil {
 		return nil, err
+	}
+
+	return req, nil
+}
+
+// NewAddEndUserEvmAccountRequest calls the generic AddEndUserEvmAccount builder with application/json body
+func NewAddEndUserEvmAccountRequest(server string, userId string, params *AddEndUserEvmAccountParams, body AddEndUserEvmAccountJSONRequestBody) (*http.Request, error) {
+	var bodyReader io.Reader
+	buf, err := json.Marshal(body)
+	if err != nil {
+		return nil, err
+	}
+	bodyReader = bytes.NewReader(buf)
+	return NewAddEndUserEvmAccountRequestWithBody(server, userId, params, "application/json", bodyReader)
+}
+
+// NewAddEndUserEvmAccountRequestWithBody generates requests for AddEndUserEvmAccount with any type of body
+func NewAddEndUserEvmAccountRequestWithBody(server string, userId string, params *AddEndUserEvmAccountParams, contentType string, body io.Reader) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithLocation("simple", false, "userId", runtime.ParamLocationPath, userId)
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/v2/end-users/%s/evm", pathParam0)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest("POST", queryURL.String(), body)
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Add("Content-Type", contentType)
+
+	if params != nil {
+
+		if params.XWalletAuth != nil {
+			var headerParam0 string
+
+			headerParam0, err = runtime.StyleParamWithLocation("simple", false, "X-Wallet-Auth", runtime.ParamLocationHeader, *params.XWalletAuth)
+			if err != nil {
+				return nil, err
+			}
+
+			req.Header.Set("X-Wallet-Auth", headerParam0)
+		}
+
+		if params.XIdempotencyKey != nil {
+			var headerParam1 string
+
+			headerParam1, err = runtime.StyleParamWithLocation("simple", false, "X-Idempotency-Key", runtime.ParamLocationHeader, *params.XIdempotencyKey)
+			if err != nil {
+				return nil, err
+			}
+
+			req.Header.Set("X-Idempotency-Key", headerParam1)
+		}
+
+	}
+
+	return req, nil
+}
+
+// NewAddEndUserEvmSmartAccountRequest calls the generic AddEndUserEvmSmartAccount builder with application/json body
+func NewAddEndUserEvmSmartAccountRequest(server string, userId string, params *AddEndUserEvmSmartAccountParams, body AddEndUserEvmSmartAccountJSONRequestBody) (*http.Request, error) {
+	var bodyReader io.Reader
+	buf, err := json.Marshal(body)
+	if err != nil {
+		return nil, err
+	}
+	bodyReader = bytes.NewReader(buf)
+	return NewAddEndUserEvmSmartAccountRequestWithBody(server, userId, params, "application/json", bodyReader)
+}
+
+// NewAddEndUserEvmSmartAccountRequestWithBody generates requests for AddEndUserEvmSmartAccount with any type of body
+func NewAddEndUserEvmSmartAccountRequestWithBody(server string, userId string, params *AddEndUserEvmSmartAccountParams, contentType string, body io.Reader) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithLocation("simple", false, "userId", runtime.ParamLocationPath, userId)
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/v2/end-users/%s/evm-smart-account", pathParam0)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest("POST", queryURL.String(), body)
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Add("Content-Type", contentType)
+
+	if params != nil {
+
+		if params.XWalletAuth != nil {
+			var headerParam0 string
+
+			headerParam0, err = runtime.StyleParamWithLocation("simple", false, "X-Wallet-Auth", runtime.ParamLocationHeader, *params.XWalletAuth)
+			if err != nil {
+				return nil, err
+			}
+
+			req.Header.Set("X-Wallet-Auth", headerParam0)
+		}
+
+		if params.XIdempotencyKey != nil {
+			var headerParam1 string
+
+			headerParam1, err = runtime.StyleParamWithLocation("simple", false, "X-Idempotency-Key", runtime.ParamLocationHeader, *params.XIdempotencyKey)
+			if err != nil {
+				return nil, err
+			}
+
+			req.Header.Set("X-Idempotency-Key", headerParam1)
+		}
+
+	}
+
+	return req, nil
+}
+
+// NewAddEndUserSolanaAccountRequest calls the generic AddEndUserSolanaAccount builder with application/json body
+func NewAddEndUserSolanaAccountRequest(server string, userId string, params *AddEndUserSolanaAccountParams, body AddEndUserSolanaAccountJSONRequestBody) (*http.Request, error) {
+	var bodyReader io.Reader
+	buf, err := json.Marshal(body)
+	if err != nil {
+		return nil, err
+	}
+	bodyReader = bytes.NewReader(buf)
+	return NewAddEndUserSolanaAccountRequestWithBody(server, userId, params, "application/json", bodyReader)
+}
+
+// NewAddEndUserSolanaAccountRequestWithBody generates requests for AddEndUserSolanaAccount with any type of body
+func NewAddEndUserSolanaAccountRequestWithBody(server string, userId string, params *AddEndUserSolanaAccountParams, contentType string, body io.Reader) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithLocation("simple", false, "userId", runtime.ParamLocationPath, userId)
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/v2/end-users/%s/solana", pathParam0)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest("POST", queryURL.String(), body)
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Add("Content-Type", contentType)
+
+	if params != nil {
+
+		if params.XWalletAuth != nil {
+			var headerParam0 string
+
+			headerParam0, err = runtime.StyleParamWithLocation("simple", false, "X-Wallet-Auth", runtime.ParamLocationHeader, *params.XWalletAuth)
+			if err != nil {
+				return nil, err
+			}
+
+			req.Header.Set("X-Wallet-Auth", headerParam0)
+		}
+
+		if params.XIdempotencyKey != nil {
+			var headerParam1 string
+
+			headerParam1, err = runtime.StyleParamWithLocation("simple", false, "X-Idempotency-Key", runtime.ParamLocationHeader, *params.XIdempotencyKey)
+			if err != nil {
+				return nil, err
+			}
+
+			req.Header.Set("X-Idempotency-Key", headerParam1)
+		}
+
 	}
 
 	return req, nil
@@ -12377,6 +12389,21 @@ type ClientWithResponsesInterface interface {
 	// GetEndUserWithResponse request
 	GetEndUserWithResponse(ctx context.Context, userId string, reqEditors ...RequestEditorFn) (*GetEndUserResponse, error)
 
+	// AddEndUserEvmAccountWithBodyWithResponse request with any body
+	AddEndUserEvmAccountWithBodyWithResponse(ctx context.Context, userId string, params *AddEndUserEvmAccountParams, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*AddEndUserEvmAccountResponse, error)
+
+	AddEndUserEvmAccountWithResponse(ctx context.Context, userId string, params *AddEndUserEvmAccountParams, body AddEndUserEvmAccountJSONRequestBody, reqEditors ...RequestEditorFn) (*AddEndUserEvmAccountResponse, error)
+
+	// AddEndUserEvmSmartAccountWithBodyWithResponse request with any body
+	AddEndUserEvmSmartAccountWithBodyWithResponse(ctx context.Context, userId string, params *AddEndUserEvmSmartAccountParams, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*AddEndUserEvmSmartAccountResponse, error)
+
+	AddEndUserEvmSmartAccountWithResponse(ctx context.Context, userId string, params *AddEndUserEvmSmartAccountParams, body AddEndUserEvmSmartAccountJSONRequestBody, reqEditors ...RequestEditorFn) (*AddEndUserEvmSmartAccountResponse, error)
+
+	// AddEndUserSolanaAccountWithBodyWithResponse request with any body
+	AddEndUserSolanaAccountWithBodyWithResponse(ctx context.Context, userId string, params *AddEndUserSolanaAccountParams, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*AddEndUserSolanaAccountResponse, error)
+
+	AddEndUserSolanaAccountWithResponse(ctx context.Context, userId string, params *AddEndUserSolanaAccountParams, body AddEndUserSolanaAccountJSONRequestBody, reqEditors ...RequestEditorFn) (*AddEndUserSolanaAccountResponse, error)
+
 	// ListEvmAccountsWithResponse request
 	ListEvmAccountsWithResponse(ctx context.Context, params *ListEvmAccountsParams, reqEditors ...RequestEditorFn) (*ListEvmAccountsResponse, error)
 
@@ -12982,6 +13009,105 @@ func (r GetEndUserResponse) Status() string {
 
 // StatusCode returns HTTPResponse.StatusCode
 func (r GetEndUserResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+type AddEndUserEvmAccountResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	JSON201      *struct {
+		// EvmAccount Information about an EVM account associated with an end user.
+		EvmAccount EndUserEvmAccount `json:"evmAccount"`
+	}
+	JSON400 *Error
+	JSON401 *Error
+	JSON402 *PaymentMethodRequiredError
+	JSON404 *Error
+	JSON422 *IdempotencyError
+	JSON500 *InternalServerError
+	JSON502 *BadGatewayError
+	JSON503 *ServiceUnavailableError
+}
+
+// Status returns HTTPResponse.Status
+func (r AddEndUserEvmAccountResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r AddEndUserEvmAccountResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+type AddEndUserEvmSmartAccountResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	JSON201      *struct {
+		// EvmSmartAccount Information about an EVM smart account associated with an end user.
+		EvmSmartAccount EndUserEvmSmartAccount `json:"evmSmartAccount"`
+	}
+	JSON400 *Error
+	JSON401 *Error
+	JSON402 *PaymentMethodRequiredError
+	JSON404 *Error
+	JSON422 *IdempotencyError
+	JSON500 *InternalServerError
+	JSON502 *BadGatewayError
+	JSON503 *ServiceUnavailableError
+}
+
+// Status returns HTTPResponse.Status
+func (r AddEndUserEvmSmartAccountResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r AddEndUserEvmSmartAccountResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+type AddEndUserSolanaAccountResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	JSON201      *struct {
+		// SolanaAccount Information about a Solana account associated with an end user.
+		SolanaAccount EndUserSolanaAccount `json:"solanaAccount"`
+	}
+	JSON400 *Error
+	JSON401 *Error
+	JSON402 *PaymentMethodRequiredError
+	JSON404 *Error
+	JSON422 *IdempotencyError
+	JSON500 *InternalServerError
+	JSON502 *BadGatewayError
+	JSON503 *ServiceUnavailableError
+}
+
+// Status returns HTTPResponse.Status
+func (r AddEndUserSolanaAccountResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r AddEndUserSolanaAccountResponse) StatusCode() int {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.StatusCode
 	}
@@ -14756,6 +14882,57 @@ func (c *ClientWithResponses) GetEndUserWithResponse(ctx context.Context, userId
 	return ParseGetEndUserResponse(rsp)
 }
 
+// AddEndUserEvmAccountWithBodyWithResponse request with arbitrary body returning *AddEndUserEvmAccountResponse
+func (c *ClientWithResponses) AddEndUserEvmAccountWithBodyWithResponse(ctx context.Context, userId string, params *AddEndUserEvmAccountParams, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*AddEndUserEvmAccountResponse, error) {
+	rsp, err := c.AddEndUserEvmAccountWithBody(ctx, userId, params, contentType, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseAddEndUserEvmAccountResponse(rsp)
+}
+
+func (c *ClientWithResponses) AddEndUserEvmAccountWithResponse(ctx context.Context, userId string, params *AddEndUserEvmAccountParams, body AddEndUserEvmAccountJSONRequestBody, reqEditors ...RequestEditorFn) (*AddEndUserEvmAccountResponse, error) {
+	rsp, err := c.AddEndUserEvmAccount(ctx, userId, params, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseAddEndUserEvmAccountResponse(rsp)
+}
+
+// AddEndUserEvmSmartAccountWithBodyWithResponse request with arbitrary body returning *AddEndUserEvmSmartAccountResponse
+func (c *ClientWithResponses) AddEndUserEvmSmartAccountWithBodyWithResponse(ctx context.Context, userId string, params *AddEndUserEvmSmartAccountParams, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*AddEndUserEvmSmartAccountResponse, error) {
+	rsp, err := c.AddEndUserEvmSmartAccountWithBody(ctx, userId, params, contentType, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseAddEndUserEvmSmartAccountResponse(rsp)
+}
+
+func (c *ClientWithResponses) AddEndUserEvmSmartAccountWithResponse(ctx context.Context, userId string, params *AddEndUserEvmSmartAccountParams, body AddEndUserEvmSmartAccountJSONRequestBody, reqEditors ...RequestEditorFn) (*AddEndUserEvmSmartAccountResponse, error) {
+	rsp, err := c.AddEndUserEvmSmartAccount(ctx, userId, params, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseAddEndUserEvmSmartAccountResponse(rsp)
+}
+
+// AddEndUserSolanaAccountWithBodyWithResponse request with arbitrary body returning *AddEndUserSolanaAccountResponse
+func (c *ClientWithResponses) AddEndUserSolanaAccountWithBodyWithResponse(ctx context.Context, userId string, params *AddEndUserSolanaAccountParams, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*AddEndUserSolanaAccountResponse, error) {
+	rsp, err := c.AddEndUserSolanaAccountWithBody(ctx, userId, params, contentType, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseAddEndUserSolanaAccountResponse(rsp)
+}
+
+func (c *ClientWithResponses) AddEndUserSolanaAccountWithResponse(ctx context.Context, userId string, params *AddEndUserSolanaAccountParams, body AddEndUserSolanaAccountJSONRequestBody, reqEditors ...RequestEditorFn) (*AddEndUserSolanaAccountResponse, error) {
+	rsp, err := c.AddEndUserSolanaAccount(ctx, userId, params, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseAddEndUserSolanaAccountResponse(rsp)
+}
+
 // ListEvmAccountsWithResponse request returning *ListEvmAccountsResponse
 func (c *ClientWithResponses) ListEvmAccountsWithResponse(ctx context.Context, params *ListEvmAccountsParams, reqEditors ...RequestEditorFn) (*ListEvmAccountsResponse, error) {
 	rsp, err := c.ListEvmAccounts(ctx, params, reqEditors...)
@@ -16316,6 +16493,261 @@ func ParseGetEndUserResponse(rsp *http.Response) (*GetEndUserResponse, error) {
 			return nil, err
 		}
 		response.JSON500 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseAddEndUserEvmAccountResponse parses an HTTP response from a AddEndUserEvmAccountWithResponse call
+func ParseAddEndUserEvmAccountResponse(rsp *http.Response) (*AddEndUserEvmAccountResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &AddEndUserEvmAccountResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 201:
+		var dest struct {
+			// EvmAccount Information about an EVM account associated with an end user.
+			EvmAccount EndUserEvmAccount `json:"evmAccount"`
+		}
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON201 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
+		var dest Error
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON400 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 401:
+		var dest Error
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON401 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 402:
+		var dest PaymentMethodRequiredError
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON402 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 404:
+		var dest Error
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON404 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 422:
+		var dest IdempotencyError
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON422 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 500:
+		var dest InternalServerError
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON500 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 502:
+		var dest BadGatewayError
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON502 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 503:
+		var dest ServiceUnavailableError
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON503 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseAddEndUserEvmSmartAccountResponse parses an HTTP response from a AddEndUserEvmSmartAccountWithResponse call
+func ParseAddEndUserEvmSmartAccountResponse(rsp *http.Response) (*AddEndUserEvmSmartAccountResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &AddEndUserEvmSmartAccountResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 201:
+		var dest struct {
+			// EvmSmartAccount Information about an EVM smart account associated with an end user.
+			EvmSmartAccount EndUserEvmSmartAccount `json:"evmSmartAccount"`
+		}
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON201 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
+		var dest Error
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON400 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 401:
+		var dest Error
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON401 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 402:
+		var dest PaymentMethodRequiredError
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON402 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 404:
+		var dest Error
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON404 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 422:
+		var dest IdempotencyError
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON422 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 500:
+		var dest InternalServerError
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON500 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 502:
+		var dest BadGatewayError
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON502 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 503:
+		var dest ServiceUnavailableError
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON503 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseAddEndUserSolanaAccountResponse parses an HTTP response from a AddEndUserSolanaAccountWithResponse call
+func ParseAddEndUserSolanaAccountResponse(rsp *http.Response) (*AddEndUserSolanaAccountResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &AddEndUserSolanaAccountResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 201:
+		var dest struct {
+			// SolanaAccount Information about a Solana account associated with an end user.
+			SolanaAccount EndUserSolanaAccount `json:"solanaAccount"`
+		}
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON201 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
+		var dest Error
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON400 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 401:
+		var dest Error
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON401 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 402:
+		var dest PaymentMethodRequiredError
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON402 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 404:
+		var dest Error
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON404 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 422:
+		var dest IdempotencyError
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON422 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 500:
+		var dest InternalServerError
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON500 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 502:
+		var dest BadGatewayError
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON502 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 503:
+		var dest ServiceUnavailableError
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON503 = &dest
 
 	}
 

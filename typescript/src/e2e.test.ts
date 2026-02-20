@@ -363,6 +363,158 @@ describe("CDP Client E2E Tests", () => {
     logger.log("Retrieved end user:", safeStringify(retrievedEndUser));
   });
 
+  it("should add an EVM account to an existing end user", async () => {
+    const randomEmail = `test-${Date.now()}@example.com`;
+
+    // Create an end user with an EVM account
+    const endUser = await cdp.endUser.createEndUser({
+      authenticationMethods: [{ type: "email", email: randomEmail }],
+      evmAccount: { createSmartAccount: false },
+    });
+
+    expect(endUser).toBeDefined();
+    expect(endUser.evmAccounts).toHaveLength(1);
+
+    logger.log("Created end user:", safeStringify(endUser));
+
+    // Add another EVM account to the same end user
+    const result = await cdp.endUser.addEndUserEvmAccount({
+      userId: endUser.userId,
+    });
+
+    expect(result).toBeDefined();
+    expect(result.evmAccount).toBeDefined();
+    expect(result.evmAccount.address).toBeDefined();
+    expect(result.evmAccount.createdAt).toBeDefined();
+
+    logger.log("Added EVM account:", safeStringify(result));
+
+    // Verify the end user now has two EVM accounts
+    const updatedEndUser = await cdp.endUser.getEndUser({
+      userId: endUser.userId,
+    });
+
+    expect(updatedEndUser.evmAccounts).toHaveLength(2);
+
+    logger.log("Updated end user:", safeStringify(updatedEndUser));
+  });
+
+  it("should add an EVM smart account to an existing end user", async () => {
+    const randomEmail = `test-${Date.now()}@example.com`;
+
+    // Create an end user with an EVM smart account
+    const endUser = await cdp.endUser.createEndUser({
+      authenticationMethods: [{ type: "email", email: randomEmail }],
+      evmAccount: { createSmartAccount: true, enableSpendPermissions: true },
+    });
+
+    expect(endUser).toBeDefined();
+    expect(endUser.evmSmartAccounts).toHaveLength(1);
+
+    logger.log("Created end user:", safeStringify(endUser));
+
+    // Add another EVM smart account to the same end user
+    const result = await cdp.endUser.addEndUserEvmSmartAccount({
+      userId: endUser.userId,
+      enableSpendPermissions: true,
+    });
+
+    expect(result).toBeDefined();
+    expect(result.evmSmartAccount).toBeDefined();
+    expect(result.evmSmartAccount.address).toBeDefined();
+    expect(result.evmSmartAccount.ownerAddresses).toBeDefined();
+    expect(result.evmSmartAccount.createdAt).toBeDefined();
+
+    logger.log("Added EVM smart account:", safeStringify(result));
+
+    // Verify the end user now has two EVM smart accounts
+    const updatedEndUser = await cdp.endUser.getEndUser({
+      userId: endUser.userId,
+    });
+
+    expect(updatedEndUser.evmSmartAccounts).toHaveLength(2);
+
+    logger.log("Updated end user:", safeStringify(updatedEndUser));
+  });
+
+  it("should add a Solana account to an existing end user", async () => {
+    const randomEmail = `test-${Date.now()}@example.com`;
+
+    // Create an end user with a Solana account
+    const endUser = await cdp.endUser.createEndUser({
+      authenticationMethods: [{ type: "email", email: randomEmail }],
+      solanaAccount: { createSmartAccount: false },
+    });
+
+    expect(endUser).toBeDefined();
+    expect(endUser.solanaAccounts).toHaveLength(1);
+
+    logger.log("Created end user:", safeStringify(endUser));
+
+    // Add another Solana account to the same end user
+    const result = await cdp.endUser.addEndUserSolanaAccount({
+      userId: endUser.userId,
+    });
+
+    expect(result).toBeDefined();
+    expect(result.solanaAccount).toBeDefined();
+    expect(result.solanaAccount.address).toBeDefined();
+    expect(result.solanaAccount.createdAt).toBeDefined();
+
+    logger.log("Added Solana account:", safeStringify(result));
+
+    // Verify the end user now has two Solana accounts
+    const updatedEndUser = await cdp.endUser.getEndUser({
+      userId: endUser.userId,
+    });
+
+    expect(updatedEndUser.solanaAccounts).toHaveLength(2);
+
+    logger.log("Updated end user:", safeStringify(updatedEndUser));
+  });
+
+  it("should add accounts using EndUserAccount object methods", async () => {
+    const randomEmail = `test-${Date.now()}@example.com`;
+
+    // Create an end user
+    const endUser = await cdp.endUser.createEndUser({
+      authenticationMethods: [{ type: "email", email: randomEmail }],
+    });
+
+    expect(endUser).toBeDefined();
+    expect(typeof endUser.addEvmAccount).toBe("function");
+    expect(typeof endUser.addEvmSmartAccount).toBe("function");
+    expect(typeof endUser.addSolanaAccount).toBe("function");
+
+    logger.log("Created end user with methods:", safeStringify(endUser));
+
+    // Add an EVM EOA account using the object method
+    const evmResult = await endUser.addEvmAccount();
+    expect(evmResult).toBeDefined();
+    expect(evmResult.evmAccount.address).toBeDefined();
+    logger.log("Added EVM EOA account via object method:", safeStringify(evmResult));
+
+    // Add an EVM smart account using the object method
+    const smartResult = await endUser.addEvmSmartAccount({ enableSpendPermissions: false });
+    expect(smartResult).toBeDefined();
+    expect(smartResult.evmSmartAccount.address).toBeDefined();
+    logger.log("Added EVM smart account via object method:", safeStringify(smartResult));
+
+    // Add a Solana account using the object method
+    const solanaResult = await endUser.addSolanaAccount();
+    expect(solanaResult).toBeDefined();
+    expect(solanaResult.solanaAccount.address).toBeDefined();
+    logger.log("Added Solana account via object method:", safeStringify(solanaResult));
+
+    // Verify the end user has all the accounts
+    const updatedEndUser = await cdp.endUser.getEndUser({ userId: endUser.userId });
+    expect(updatedEndUser.evmAccounts).toHaveLength(2);
+    expect(updatedEndUser.evmSmartAccounts).toHaveLength(1);
+    expect(updatedEndUser.solanaAccounts).toHaveLength(1);
+
+    logger.log("Updated end user:", safeStringify(updatedEndUser));
+  });
+
   it("should import an evm server account from a private key", async () => {
     const privateKey = generatePrivateKey();
     const randomName = generateRandomName();
@@ -2579,7 +2731,7 @@ describe("CDP Client E2E Tests", () => {
             update: { accountPolicy: policy.id },
           });
           const transferData =
-            "0xa9059cbb000000000000000000000000742d35cc6634c0532925a3b844bc454e4438f44e0000000000000000000000000000000000000000000000000000000000200000"; // transfer to address with 2M tokens
+            "0xa9059cbb00000000000000000000000000000000000000000000000000000000000000010000000000000000000000000000000000000000000000000000000000200000"; // transfer 2M tokens to 0x01 (burn address)
 
           await expect(() =>
             cdp.evm.signTransaction({
@@ -2831,7 +2983,7 @@ describe("CDP Client E2E Tests", () => {
             update: { accountPolicy: policy.id },
           });
           const transferData =
-            "0xa9059cbb000000000000000000000000742d35cc6634c0532925a3b844bc454e4438f44e0000000000000000000000000000000000000000000000000000000000200000"; // transfer to address with 2M tokens
+            "0xa9059cbb00000000000000000000000000000000000000000000000000000000000000010000000000000000000000000000000000000000000000000000000000200000"; // transfer 2M tokens to 0x01 (burn address)
 
           await expect(() =>
             cdp.evm.sendTransaction({
