@@ -29,7 +29,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         .await?;
 
     let owner_account = owner_response.into_inner();
-    println!("✅ Created owner account: {}", &*owner_account.address);
+    println!("✅ Created owner account.");
 
     // 2. Create a smart account
     println!("\n2. Creating smart account...");
@@ -44,9 +44,8 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         .await?;
 
     let smart_account = smart_response.into_inner();
-    println!("✅ Created smart account: {}", &*smart_account.address);
-    println!("   Name: {:?}", smart_account.name);
-    println!("   Owners: {:?}", smart_account.owners);
+    println!("✅ Created smart account.");
+    println!("   Smart account created successfully.");
 
     // 3. Get smart account by address
     println!("\n3. Retrieving smart account by address...");
@@ -57,21 +56,14 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         .await?;
 
     let retrieved_account = get_response.into_inner();
-    println!(
-        "✅ Retrieved smart account: {}",
-        &*retrieved_account.address
-    );
-    println!("   Created: {:?}", retrieved_account.created_at);
+    println!("✅ Retrieved smart account.");
 
     // 4. List all smart accounts
     println!("\n4. Listing all smart accounts...");
     let list_response = client.list_evm_smart_accounts().page_size(5).send().await?;
 
     let accounts_list = list_response.into_inner();
-    println!("✅ Found {} smart accounts:", accounts_list.accounts.len());
-    for (i, acc) in accounts_list.accounts.iter().enumerate() {
-        println!("   {}. {} - {:?}", i + 1, &*acc.address, acc.name);
-    }
+    println!("✅ Retrieved list of smart accounts ({} entries).", accounts_list.accounts.len());
 
     // 5. Update smart account name
     println!("\n5. Updating smart account name...");
@@ -86,7 +78,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         .await?;
 
     let updated_account = update_response.into_inner();
-    println!("✅ Updated smart account name: {:?}", updated_account.name);
+    println!("✅ Updated smart account name.");
 
     println!("\n🎉 Smart Account Management Complete!");
     println!("\n💡 Smart accounts enable advanced features like:");
