@@ -255,6 +255,7 @@ export type ErrorType = (typeof ErrorType)[keyof typeof ErrorType];
 export const ErrorType = {
   already_exists: "already_exists",
   bad_gateway: "bad_gateway",
+  client_closed_request: "client_closed_request",
   faucet_limit_exceeded: "faucet_limit_exceeded",
   forbidden: "forbidden",
   idempotency_error: "idempotency_error",
@@ -309,6 +310,7 @@ export const ErrorType = {
   order_quote_expired: "order_quote_expired",
   order_already_filled: "order_already_filled",
   order_already_canceled: "order_already_canceled",
+  account_not_ready: "account_not_ready",
 } as const;
 
 /**
@@ -419,33 +421,41 @@ export const EvmEip7702DelegationNetwork = {
 } as const;
 
 /**
- * The current delegation state of the account.
-CURRENT means the account is fully delegated and initialized. NOT_DELEGATED means the account has no active EIP-7702 delegation. WRONG_PROXY means the account is delegated to an unexpected proxy contract. NOT_INITIALIZED means the account is delegated to the correct proxy but has not been initialized.
+ * The current status of the delegation operation.
+UNSPECIFIED means the status has not been set. PENDING means the operation has been created but not yet submitted. SUBMITTED means the operation has been submitted to the network. COMPLETED means the operation has completed successfully. FAILED means the operation has failed.
  */
-export type EvmEip7702DelegationStatusStatus =
-  (typeof EvmEip7702DelegationStatusStatus)[keyof typeof EvmEip7702DelegationStatusStatus];
+export type EvmEip7702DelegationOperationStatus =
+  (typeof EvmEip7702DelegationOperationStatus)[keyof typeof EvmEip7702DelegationOperationStatus];
 
 // eslint-disable-next-line @typescript-eslint/no-redeclare
-export const EvmEip7702DelegationStatusStatus = {
-  CURRENT: "CURRENT",
-  NOT_DELEGATED: "NOT_DELEGATED",
-  WRONG_PROXY: "WRONG_PROXY",
-  NOT_INITIALIZED: "NOT_INITIALIZED",
+export const EvmEip7702DelegationOperationStatus = {
+  UNSPECIFIED: "UNSPECIFIED",
+  PENDING: "PENDING",
+  SUBMITTED: "SUBMITTED",
+  COMPLETED: "COMPLETED",
+  FAILED: "FAILED",
 } as const;
 
 /**
- * The EIP-7702 delegation status for an EVM account.
+ * The status of an EIP-7702 delegation operation.
  */
-export interface EvmEip7702DelegationStatus {
-  /** The current delegation state of the account.
-CURRENT means the account is fully delegated and initialized. NOT_DELEGATED means the account has no active EIP-7702 delegation. WRONG_PROXY means the account is delegated to an unexpected proxy contract. NOT_INITIALIZED means the account is delegated to the correct proxy but has not been initialized. */
-  status: EvmEip7702DelegationStatusStatus;
+export interface EvmEip7702DelegationOperation {
+  /** The unique identifier for the delegation operation. */
+  delegationOperationId: string;
+  /** The current status of the delegation operation.
+UNSPECIFIED means the status has not been set. PENDING means the operation has been created but not yet submitted. SUBMITTED means the operation has been submitted to the network. COMPLETED means the operation has completed successfully. FAILED means the operation has failed. */
+  status: EvmEip7702DelegationOperationStatus;
+  /**
+   * The hash of the delegation transaction, if available. Present once the transaction has been submitted to the network.
+   * @pattern ^0x[0-9a-fA-F]{64}$
+   */
+  transactionHash?: string;
+  network: EvmEip7702DelegationNetwork;
   /**
    * The address the account has delegated to, if any. Only present when the account has an active delegation.
    * @pattern ^0x[0-9a-fA-F]{40}$
    */
   delegateAddress?: string;
-  network: EvmEip7702DelegationNetwork;
 }
 
 export interface EvmSmartAccount {
@@ -2402,6 +2412,294 @@ export interface SendUserOperationRule {
   criteria: SendUserOperationCriteria;
 }
 
+export type SignEndUserEvmTransactionCriteriaItem =
+  | EthValueCriterion
+  | EvmAddressCriterion
+  | EvmDataCriterion
+  | NetUSDChangeCriterion;
+
+/**
+ * A schema for specifying criteria for the signEndUserEvmTransaction operation.
+ */
+export type SignEndUserEvmTransactionCriteria = SignEndUserEvmTransactionCriteriaItem[];
+
+/**
+ * Whether matching the rule will cause the request to be rejected or accepted.
+ */
+export type SignEndUserEvmTransactionRuleAction =
+  (typeof SignEndUserEvmTransactionRuleAction)[keyof typeof SignEndUserEvmTransactionRuleAction];
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const SignEndUserEvmTransactionRuleAction = {
+  reject: "reject",
+  accept: "accept",
+} as const;
+
+/**
+ * The operation to which the rule applies. Every element of the `criteria` array must match the specified operation.
+ */
+export type SignEndUserEvmTransactionRuleOperation =
+  (typeof SignEndUserEvmTransactionRuleOperation)[keyof typeof SignEndUserEvmTransactionRuleOperation];
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const SignEndUserEvmTransactionRuleOperation = {
+  signEndUserEvmTransaction: "signEndUserEvmTransaction",
+} as const;
+
+export interface SignEndUserEvmTransactionRule {
+  /** Whether matching the rule will cause the request to be rejected or accepted. */
+  action: SignEndUserEvmTransactionRuleAction;
+  /** The operation to which the rule applies. Every element of the `criteria` array must match the specified operation. */
+  operation: SignEndUserEvmTransactionRuleOperation;
+  criteria: SignEndUserEvmTransactionCriteria;
+}
+
+export type SendEndUserEvmTransactionCriteriaItem =
+  | EthValueCriterion
+  | EvmAddressCriterion
+  | EvmNetworkCriterion
+  | EvmDataCriterion
+  | NetUSDChangeCriterion;
+
+/**
+ * A schema for specifying criteria for the sendEndUserEvmTransaction operation.
+ */
+export type SendEndUserEvmTransactionCriteria = SendEndUserEvmTransactionCriteriaItem[];
+
+/**
+ * Whether matching the rule will cause the request to be rejected or accepted.
+ */
+export type SendEndUserEvmTransactionRuleAction =
+  (typeof SendEndUserEvmTransactionRuleAction)[keyof typeof SendEndUserEvmTransactionRuleAction];
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const SendEndUserEvmTransactionRuleAction = {
+  reject: "reject",
+  accept: "accept",
+} as const;
+
+/**
+ * The operation to which the rule applies. Every element of the `criteria` array must match the specified operation.
+ */
+export type SendEndUserEvmTransactionRuleOperation =
+  (typeof SendEndUserEvmTransactionRuleOperation)[keyof typeof SendEndUserEvmTransactionRuleOperation];
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const SendEndUserEvmTransactionRuleOperation = {
+  sendEndUserEvmTransaction: "sendEndUserEvmTransaction",
+} as const;
+
+export interface SendEndUserEvmTransactionRule {
+  /** Whether matching the rule will cause the request to be rejected or accepted. */
+  action: SendEndUserEvmTransactionRuleAction;
+  /** The operation to which the rule applies. Every element of the `criteria` array must match the specified operation. */
+  operation: SendEndUserEvmTransactionRuleOperation;
+  criteria: SendEndUserEvmTransactionCriteria;
+}
+
+/**
+ * A schema for specifying criteria for the signEndUserEvmMessage operation.
+ */
+export type SignEndUserEvmMessageCriteria = EvmMessageCriterion[];
+
+/**
+ * Whether matching the rule will cause the request to be rejected or accepted.
+ */
+export type SignEndUserEvmMessageRuleAction =
+  (typeof SignEndUserEvmMessageRuleAction)[keyof typeof SignEndUserEvmMessageRuleAction];
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const SignEndUserEvmMessageRuleAction = {
+  reject: "reject",
+  accept: "accept",
+} as const;
+
+/**
+ * The operation to which the rule applies. Every element of the `criteria` array must match the specified operation.
+ */
+export type SignEndUserEvmMessageRuleOperation =
+  (typeof SignEndUserEvmMessageRuleOperation)[keyof typeof SignEndUserEvmMessageRuleOperation];
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const SignEndUserEvmMessageRuleOperation = {
+  signEndUserEvmMessage: "signEndUserEvmMessage",
+} as const;
+
+export interface SignEndUserEvmMessageRule {
+  /** Whether matching the rule will cause the request to be rejected or accepted. */
+  action: SignEndUserEvmMessageRuleAction;
+  /** The operation to which the rule applies. Every element of the `criteria` array must match the specified operation. */
+  operation: SignEndUserEvmMessageRuleOperation;
+  criteria: SignEndUserEvmMessageCriteria;
+}
+
+export type SignEndUserEvmTypedDataCriteriaItem =
+  | SignEvmTypedDataFieldCriterion
+  | SignEvmTypedDataVerifyingContractCriterion;
+
+/**
+ * A schema for specifying criteria for the signEndUserEvmTypedData operation.
+ */
+export type SignEndUserEvmTypedDataCriteria = SignEndUserEvmTypedDataCriteriaItem[];
+
+/**
+ * Whether matching the rule will cause the request to be rejected or accepted.
+ */
+export type SignEndUserEvmTypedDataRuleAction =
+  (typeof SignEndUserEvmTypedDataRuleAction)[keyof typeof SignEndUserEvmTypedDataRuleAction];
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const SignEndUserEvmTypedDataRuleAction = {
+  reject: "reject",
+  accept: "accept",
+} as const;
+
+/**
+ * The operation to which the rule applies. Every element of the `criteria` array must match the specified operation.
+ */
+export type SignEndUserEvmTypedDataRuleOperation =
+  (typeof SignEndUserEvmTypedDataRuleOperation)[keyof typeof SignEndUserEvmTypedDataRuleOperation];
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const SignEndUserEvmTypedDataRuleOperation = {
+  signEndUserEvmTypedData: "signEndUserEvmTypedData",
+} as const;
+
+export interface SignEndUserEvmTypedDataRule {
+  /** Whether matching the rule will cause the request to be rejected or accepted. */
+  action: SignEndUserEvmTypedDataRuleAction;
+  /** The operation to which the rule applies. Every element of the `criteria` array must match the specified operation. */
+  operation: SignEndUserEvmTypedDataRuleOperation;
+  criteria: SignEndUserEvmTypedDataCriteria;
+}
+
+export type SignEndUserSolTransactionCriteriaItem =
+  | SolAddressCriterion
+  | SolValueCriterion
+  | SplAddressCriterion
+  | SplValueCriterion
+  | MintAddressCriterion
+  | SolDataCriterion
+  | ProgramIdCriterion;
+
+/**
+ * A schema for specifying criteria for the signEndUserSolTransaction operation.
+ */
+export type SignEndUserSolTransactionCriteria = SignEndUserSolTransactionCriteriaItem[];
+
+/**
+ * Whether matching the rule will cause the request to be rejected or accepted.
+ */
+export type SignEndUserSolTransactionRuleAction =
+  (typeof SignEndUserSolTransactionRuleAction)[keyof typeof SignEndUserSolTransactionRuleAction];
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const SignEndUserSolTransactionRuleAction = {
+  reject: "reject",
+  accept: "accept",
+} as const;
+
+/**
+ * The operation to which the rule applies. Every element of the `criteria` array must match the specified operation.
+ */
+export type SignEndUserSolTransactionRuleOperation =
+  (typeof SignEndUserSolTransactionRuleOperation)[keyof typeof SignEndUserSolTransactionRuleOperation];
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const SignEndUserSolTransactionRuleOperation = {
+  signEndUserSolTransaction: "signEndUserSolTransaction",
+} as const;
+
+export interface SignEndUserSolTransactionRule {
+  /** Whether matching the rule will cause the request to be rejected or accepted. */
+  action: SignEndUserSolTransactionRuleAction;
+  /** The operation to which the rule applies. Every element of the `criteria` array must match the specified operation. */
+  operation: SignEndUserSolTransactionRuleOperation;
+  criteria: SignEndUserSolTransactionCriteria;
+}
+
+export type SendEndUserSolTransactionCriteriaItem =
+  | SolAddressCriterion
+  | SolValueCriterion
+  | SplAddressCriterion
+  | SplValueCriterion
+  | MintAddressCriterion
+  | SolDataCriterion
+  | ProgramIdCriterion
+  | SolNetworkCriterion;
+
+/**
+ * A schema for specifying criteria for the sendEndUserSolTransaction operation.
+ */
+export type SendEndUserSolTransactionCriteria = SendEndUserSolTransactionCriteriaItem[];
+
+/**
+ * Whether matching the rule will cause the request to be rejected or accepted.
+ */
+export type SendEndUserSolTransactionRuleAction =
+  (typeof SendEndUserSolTransactionRuleAction)[keyof typeof SendEndUserSolTransactionRuleAction];
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const SendEndUserSolTransactionRuleAction = {
+  reject: "reject",
+  accept: "accept",
+} as const;
+
+/**
+ * The operation to which the rule applies. Every element of the `criteria` array must match the specified operation.
+ */
+export type SendEndUserSolTransactionRuleOperation =
+  (typeof SendEndUserSolTransactionRuleOperation)[keyof typeof SendEndUserSolTransactionRuleOperation];
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const SendEndUserSolTransactionRuleOperation = {
+  sendEndUserSolTransaction: "sendEndUserSolTransaction",
+} as const;
+
+export interface SendEndUserSolTransactionRule {
+  /** Whether matching the rule will cause the request to be rejected or accepted. */
+  action: SendEndUserSolTransactionRuleAction;
+  /** The operation to which the rule applies. Every element of the `criteria` array must match the specified operation. */
+  operation: SendEndUserSolTransactionRuleOperation;
+  criteria: SendEndUserSolTransactionCriteria;
+}
+
+/**
+ * A schema for specifying criteria for the signEndUserSolMessage operation.
+ */
+export type SignEndUserSolMessageCriteria = SolMessageCriterion[];
+
+/**
+ * Whether matching the rule will cause the request to be rejected or accepted.
+ */
+export type SignEndUserSolMessageRuleAction =
+  (typeof SignEndUserSolMessageRuleAction)[keyof typeof SignEndUserSolMessageRuleAction];
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const SignEndUserSolMessageRuleAction = {
+  reject: "reject",
+  accept: "accept",
+} as const;
+
+/**
+ * The operation to which the rule applies. Every element of the `criteria` array must match the specified operation.
+ */
+export type SignEndUserSolMessageRuleOperation =
+  (typeof SignEndUserSolMessageRuleOperation)[keyof typeof SignEndUserSolMessageRuleOperation];
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const SignEndUserSolMessageRuleOperation = {
+  signEndUserSolMessage: "signEndUserSolMessage",
+} as const;
+
+export interface SignEndUserSolMessageRule {
+  /** Whether matching the rule will cause the request to be rejected or accepted. */
+  action: SignEndUserSolMessageRuleAction;
+  /** The operation to which the rule applies. Every element of the `criteria` array must match the specified operation. */
+  operation: SignEndUserSolMessageRuleOperation;
+  criteria: SignEndUserSolMessageCriteria;
+}
+
 /**
  * A rule that limits the behavior of an account.
  */
@@ -2415,7 +2713,14 @@ export type Rule =
   | SignSolMessageRule
   | SignEvmHashRule
   | PrepareUserOperationRule
-  | SendUserOperationRule;
+  | SendUserOperationRule
+  | SignEndUserEvmTransactionRule
+  | SendEndUserEvmTransactionRule
+  | SignEndUserEvmMessageRule
+  | SignEndUserEvmTypedDataRule
+  | SignEndUserSolTransactionRule
+  | SendEndUserSolTransactionRule
+  | SignEndUserSolMessageRule;
 
 /**
  * The scope of the policy. Only one project-level policy can exist at any time.
@@ -3682,6 +3987,11 @@ export type AlreadyExistsErrorResponse = Error;
 export type InvalidSQLQueryErrorResponse = Error;
 
 /**
+ * The client closed the connection before the server could send a response.
+ */
+export type ClientClosedRequestErrorResponse = Error;
+
+/**
  * The request timed out.
  */
 export type TimedOutErrorResponse = Error;
@@ -4014,13 +4324,6 @@ export type SignEvmTypedData200 = {
   signature: string;
 };
 
-export type GetEvmEip7702DelegationStatusParams = {
-  /**
-   * The network to query the delegation status on.
-   */
-  network: EvmEip7702DelegationNetwork;
-};
-
 export type CreateEvmEip7702DelegationBody = {
   network: EvmEip7702DelegationNetwork;
   /** Whether to configure spend permissions for the upgraded, delegated account. When enabled, the account can grant permissions for third parties to spend on its behalf. */
@@ -4028,11 +4331,8 @@ export type CreateEvmEip7702DelegationBody = {
 };
 
 export type CreateEvmEip7702Delegation201 = {
-  /**
-   * The hash of the Type 4 transaction that was submitted.
-   * @pattern ^0x[0-9a-fA-F]{64}$
-   */
-  transactionHash: string;
+  /** The unique identifier for the delegation operation. Use this to poll the operation status. */
+  delegationOperationId: string;
 };
 
 export type ListEvmSmartAccountsParams = {

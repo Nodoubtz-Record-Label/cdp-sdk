@@ -4088,16 +4088,16 @@ pub mod types {
     ///{
     ///  "type": "object",
     ///  "required": [
-    ///    "transactionHash"
+    ///    "delegationOperationId"
     ///  ],
     ///  "properties": {
-    ///    "transactionHash": {
-    ///      "description": "The hash of the Type 4 transaction that was submitted.",
+    ///    "delegationOperationId": {
+    ///      "description": "The unique identifier for the delegation operation. Use this to poll the operation status.",
     ///      "examples": [
-    ///        "0x1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef"
+    ///        "a1b2c3d4-e5f6-7890-abcd-ef1234567890"
     ///      ],
     ///      "type": "string",
-    ///      "pattern": "^0x[0-9a-fA-F]{64}$"
+    ///      "format": "uuid"
     ///    }
     ///  }
     ///}
@@ -4105,9 +4105,9 @@ pub mod types {
     /// </details>
     #[derive(::serde::Deserialize, ::serde::Serialize, Clone, Debug)]
     pub struct CreateEvmEip7702DelegationResponse {
-        ///The hash of the Type 4 transaction that was submitted.
-        #[serde(rename = "transactionHash")]
-        pub transaction_hash: CreateEvmEip7702DelegationResponseTransactionHash,
+        ///The unique identifier for the delegation operation. Use this to poll the operation status.
+        #[serde(rename = "delegationOperationId")]
+        pub delegation_operation_id: ::uuid::Uuid,
     }
     impl ::std::convert::From<&CreateEvmEip7702DelegationResponse>
         for CreateEvmEip7702DelegationResponse
@@ -4119,95 +4119,6 @@ pub mod types {
     impl CreateEvmEip7702DelegationResponse {
         pub fn builder() -> builder::CreateEvmEip7702DelegationResponse {
             Default::default()
-        }
-    }
-    ///The hash of the Type 4 transaction that was submitted.
-    ///
-    /// <details><summary>JSON schema</summary>
-    ///
-    /// ```json
-    ///{
-    ///  "description": "The hash of the Type 4 transaction that was submitted.",
-    ///  "examples": [
-    ///    "0x1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef"
-    ///  ],
-    ///  "type": "string",
-    ///  "pattern": "^0x[0-9a-fA-F]{64}$"
-    ///}
-    /// ```
-    /// </details>
-    #[derive(::serde::Serialize, Clone, Debug, Eq, Hash, Ord, PartialEq, PartialOrd)]
-    #[serde(transparent)]
-    pub struct CreateEvmEip7702DelegationResponseTransactionHash(::std::string::String);
-    impl ::std::ops::Deref for CreateEvmEip7702DelegationResponseTransactionHash {
-        type Target = ::std::string::String;
-        fn deref(&self) -> &::std::string::String {
-            &self.0
-        }
-    }
-    impl ::std::convert::From<CreateEvmEip7702DelegationResponseTransactionHash>
-        for ::std::string::String
-    {
-        fn from(value: CreateEvmEip7702DelegationResponseTransactionHash) -> Self {
-            value.0
-        }
-    }
-    impl ::std::convert::From<&CreateEvmEip7702DelegationResponseTransactionHash>
-        for CreateEvmEip7702DelegationResponseTransactionHash
-    {
-        fn from(value: &CreateEvmEip7702DelegationResponseTransactionHash) -> Self {
-            value.clone()
-        }
-    }
-    impl ::std::str::FromStr for CreateEvmEip7702DelegationResponseTransactionHash {
-        type Err = self::error::ConversionError;
-        fn from_str(value: &str) -> ::std::result::Result<Self, self::error::ConversionError> {
-            static PATTERN: ::std::sync::LazyLock<::regress::Regex> =
-                ::std::sync::LazyLock::new(|| {
-                    ::regress::Regex::new("^0x[0-9a-fA-F]{64}$").unwrap()
-                });
-            if PATTERN.find(value).is_none() {
-                return Err("doesn't match pattern \"^0x[0-9a-fA-F]{64}$\"".into());
-            }
-            Ok(Self(value.to_string()))
-        }
-    }
-    impl ::std::convert::TryFrom<&str> for CreateEvmEip7702DelegationResponseTransactionHash {
-        type Error = self::error::ConversionError;
-        fn try_from(value: &str) -> ::std::result::Result<Self, self::error::ConversionError> {
-            value.parse()
-        }
-    }
-    impl ::std::convert::TryFrom<&::std::string::String>
-        for CreateEvmEip7702DelegationResponseTransactionHash
-    {
-        type Error = self::error::ConversionError;
-        fn try_from(
-            value: &::std::string::String,
-        ) -> ::std::result::Result<Self, self::error::ConversionError> {
-            value.parse()
-        }
-    }
-    impl ::std::convert::TryFrom<::std::string::String>
-        for CreateEvmEip7702DelegationResponseTransactionHash
-    {
-        type Error = self::error::ConversionError;
-        fn try_from(
-            value: ::std::string::String,
-        ) -> ::std::result::Result<Self, self::error::ConversionError> {
-            value.parse()
-        }
-    }
-    impl<'de> ::serde::Deserialize<'de> for CreateEvmEip7702DelegationResponseTransactionHash {
-        fn deserialize<D>(deserializer: D) -> ::std::result::Result<Self, D::Error>
-        where
-            D: ::serde::Deserializer<'de>,
-        {
-            ::std::string::String::deserialize(deserializer)?
-                .parse()
-                .map_err(|e: self::error::ConversionError| {
-                    <D::Error as ::serde::de::Error>::custom(e.to_string())
-                })
         }
     }
     ///`CreateEvmEip7702DelegationXIdempotencyKey`
@@ -10913,6 +10824,7 @@ pub mod types {
     ///  "enum": [
     ///    "already_exists",
     ///    "bad_gateway",
+    ///    "client_closed_request",
     ///    "faucet_limit_exceeded",
     ///    "forbidden",
     ///    "idempotency_error",
@@ -10966,12 +10878,15 @@ pub mod types {
     ///    "mfa_not_enrolled",
     ///    "order_quote_expired",
     ///    "order_already_filled",
-    ///    "order_already_canceled"
+    ///    "order_already_canceled",
+    ///    "account_not_ready"
     ///  ],
     ///  "x-error-instructions": {
+    ///    "account_not_ready": "This error occurs when an operation is attempted on an account that is still being provisioned.\n\n**Steps to resolve:**\n1. Wait a few moments and retry the request\n2. If the error persists, the account may still be completing setup — retry with exponential backoff",
     ///    "already_exists": "This error occurs when trying to create a resource that already exists.\n\n**Steps to resolve:**\n1. Check if the resource exists before creation\n2. Use GET endpoints to verify resource state\n3. Use unique identifiers/names for resources",
     ///    "asset_mismatch": "This error occurs when the assets specified in the transfer are incompatible or don't match expected values.\n\n**Steps to resolve:**\n1. Ensure the `asset` field matches either the source or target asset\n2. Verify that the source and target assets are compatible for conversion (if different)\n3. Check that the asset symbols are correctly specified\n\n**Common causes:**\n- Transfer asset doesn't match source or target\n- Attempting an unsupported asset conversion\n- Typo in asset symbols",
     ///    "bad_gateway": "This error occurs when the CDP API is unable to connect to the backend service.\n\n**Steps to resolve:**\n1. Retry your request after a short delay\n2. If persistent, contact CDP support with:\n   - The timestamp of the error\n   - Request details\n3. Consider implementing retry logic with an exponential backoff\n\n**Note:** These errors are automatically logged and monitored by CDP.",
+    ///    "client_closed_request": "This error occurs when the client closes the connection before the server can send a response.\n\n**Common causes:**\n- The client timed out waiting for the server response\n- The client application was terminated during a pending request\n- Network interruption caused the client connection to drop\n\n**Steps to resolve:**\n1. Increase client-side timeout settings if applicable\n2. Implement retry logic with exponential backoff for long-running queries\n3. Consider optimizing the request to reduce server processing time",
     ///    "document_verification_failed": "This error occurs when the user has not verified their identity for their coinbase.com account.\n**Steps to resolve:**\n1. Verify your coinbase account identity with valid documents at https://www.coinbase.com/settings/account-levels.",
     ///    "faucet_limit_exceeded": "This error occurs when you've exceeded the faucet request limits.\n\n**Steps to resolve:**\n1. Wait for the time window to reset\n2. Use funds more efficiently in your testing\n\nFor more information on faucet limits, please visit the [EVM Faucet endpoint](https://docs.cdp.coinbase.com/api-reference/v2/rest-api/faucets/request-funds-on-evm-test-networks) or the [Solana Faucet endpoint](https://docs.cdp.coinbase.com/api-reference/v2/rest-api/faucets/request-funds-on-solana-devnet).",
     ///    "forbidden": "This error occurs when you don't have permission to access the resource.\n\n**Steps to resolve:**\n1. Verify your permissions to access the resource\n2. Ensure that you are the owner of the requested resource",
@@ -11044,6 +10959,8 @@ pub mod types {
         AlreadyExists,
         #[serde(rename = "bad_gateway")]
         BadGateway,
+        #[serde(rename = "client_closed_request")]
+        ClientClosedRequest,
         #[serde(rename = "faucet_limit_exceeded")]
         FaucetLimitExceeded,
         #[serde(rename = "forbidden")]
@@ -11152,6 +11069,8 @@ pub mod types {
         OrderAlreadyFilled,
         #[serde(rename = "order_already_canceled")]
         OrderAlreadyCanceled,
+        #[serde(rename = "account_not_ready")]
+        AccountNotReady,
     }
     impl ::std::convert::From<&Self> for ErrorType {
         fn from(value: &ErrorType) -> Self {
@@ -11163,6 +11082,7 @@ pub mod types {
             match *self {
                 Self::AlreadyExists => f.write_str("already_exists"),
                 Self::BadGateway => f.write_str("bad_gateway"),
+                Self::ClientClosedRequest => f.write_str("client_closed_request"),
                 Self::FaucetLimitExceeded => f.write_str("faucet_limit_exceeded"),
                 Self::Forbidden => f.write_str("forbidden"),
                 Self::IdempotencyError => f.write_str("idempotency_error"),
@@ -11221,6 +11141,7 @@ pub mod types {
                 Self::OrderQuoteExpired => f.write_str("order_quote_expired"),
                 Self::OrderAlreadyFilled => f.write_str("order_already_filled"),
                 Self::OrderAlreadyCanceled => f.write_str("order_already_canceled"),
+                Self::AccountNotReady => f.write_str("account_not_ready"),
             }
         }
     }
@@ -11230,6 +11151,7 @@ pub mod types {
             match value {
                 "already_exists" => Ok(Self::AlreadyExists),
                 "bad_gateway" => Ok(Self::BadGateway),
+                "client_closed_request" => Ok(Self::ClientClosedRequest),
                 "faucet_limit_exceeded" => Ok(Self::FaucetLimitExceeded),
                 "forbidden" => Ok(Self::Forbidden),
                 "idempotency_error" => Ok(Self::IdempotencyError),
@@ -11284,6 +11206,7 @@ pub mod types {
                 "order_quote_expired" => Ok(Self::OrderQuoteExpired),
                 "order_already_filled" => Ok(Self::OrderAlreadyFilled),
                 "order_already_canceled" => Ok(Self::OrderAlreadyCanceled),
+                "account_not_ready" => Ok(Self::AccountNotReady),
                 _ => Err("invalid value".into()),
             }
         }
@@ -13285,15 +13208,16 @@ pub mod types {
             value.parse()
         }
     }
-    ///The EIP-7702 delegation status for an EVM account.
+    ///The status of an EIP-7702 delegation operation.
     ///
     /// <details><summary>JSON schema</summary>
     ///
     /// ```json
     ///{
-    ///  "description": "The EIP-7702 delegation status for an EVM account.",
+    ///  "description": "The status of an EIP-7702 delegation operation.",
     ///  "type": "object",
     ///  "required": [
+    ///    "delegationOperationId",
     ///    "network",
     ///    "status"
     ///  ],
@@ -13306,47 +13230,74 @@ pub mod types {
     ///      "type": "string",
     ///      "pattern": "^0x[0-9a-fA-F]{40}$"
     ///    },
+    ///    "delegationOperationId": {
+    ///      "description": "The unique identifier for the delegation operation.",
+    ///      "examples": [
+    ///        "a1b2c3d4-e5f6-7890-abcd-ef1234567890"
+    ///      ],
+    ///      "type": "string",
+    ///      "format": "uuid"
+    ///    },
     ///    "network": {
     ///      "$ref": "#/components/schemas/EvmEip7702DelegationNetwork"
     ///    },
     ///    "status": {
-    ///      "description": "The current delegation state of the account.\nCURRENT means the account is fully delegated and initialized. NOT_DELEGATED means the account has no active EIP-7702 delegation. WRONG_PROXY means the account is delegated to an unexpected proxy contract. NOT_INITIALIZED means the account is delegated to the correct proxy but has not been initialized.",
+    ///      "description": "The current status of the delegation operation.\nUNSPECIFIED means the status has not been set. PENDING means the operation has been created but not yet submitted. SUBMITTED means the operation has been submitted to the network. COMPLETED means the operation has completed successfully. FAILED means the operation has failed.",
     ///      "examples": [
-    ///        "CURRENT"
+    ///        "COMPLETED"
     ///      ],
     ///      "type": "string",
     ///      "enum": [
-    ///        "CURRENT",
-    ///        "NOT_DELEGATED",
-    ///        "WRONG_PROXY",
-    ///        "NOT_INITIALIZED"
+    ///        "UNSPECIFIED",
+    ///        "PENDING",
+    ///        "SUBMITTED",
+    ///        "COMPLETED",
+    ///        "FAILED"
     ///      ]
+    ///    },
+    ///    "transactionHash": {
+    ///      "description": "The hash of the delegation transaction, if available. Present once the transaction has been submitted to the network.",
+    ///      "examples": [
+    ///        "0x1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef"
+    ///      ],
+    ///      "type": "string",
+    ///      "pattern": "^0x[0-9a-fA-F]{64}$"
     ///    }
     ///  }
     ///}
     /// ```
     /// </details>
     #[derive(::serde::Deserialize, ::serde::Serialize, Clone, Debug)]
-    pub struct EvmEip7702DelegationStatus {
+    pub struct EvmEip7702DelegationOperation {
         ///The address the account has delegated to, if any. Only present when the account has an active delegation.
         #[serde(
             rename = "delegateAddress",
             default,
             skip_serializing_if = "::std::option::Option::is_none"
         )]
-        pub delegate_address: ::std::option::Option<EvmEip7702DelegationStatusDelegateAddress>,
+        pub delegate_address: ::std::option::Option<EvmEip7702DelegationOperationDelegateAddress>,
+        ///The unique identifier for the delegation operation.
+        #[serde(rename = "delegationOperationId")]
+        pub delegation_operation_id: ::uuid::Uuid,
         pub network: EvmEip7702DelegationNetwork,
-        /**The current delegation state of the account.
-        CURRENT means the account is fully delegated and initialized. NOT_DELEGATED means the account has no active EIP-7702 delegation. WRONG_PROXY means the account is delegated to an unexpected proxy contract. NOT_INITIALIZED means the account is delegated to the correct proxy but has not been initialized.*/
-        pub status: EvmEip7702DelegationStatusStatus,
+        /**The current status of the delegation operation.
+        UNSPECIFIED means the status has not been set. PENDING means the operation has been created but not yet submitted. SUBMITTED means the operation has been submitted to the network. COMPLETED means the operation has completed successfully. FAILED means the operation has failed.*/
+        pub status: EvmEip7702DelegationOperationStatus,
+        ///The hash of the delegation transaction, if available. Present once the transaction has been submitted to the network.
+        #[serde(
+            rename = "transactionHash",
+            default,
+            skip_serializing_if = "::std::option::Option::is_none"
+        )]
+        pub transaction_hash: ::std::option::Option<EvmEip7702DelegationOperationTransactionHash>,
     }
-    impl ::std::convert::From<&EvmEip7702DelegationStatus> for EvmEip7702DelegationStatus {
-        fn from(value: &EvmEip7702DelegationStatus) -> Self {
+    impl ::std::convert::From<&EvmEip7702DelegationOperation> for EvmEip7702DelegationOperation {
+        fn from(value: &EvmEip7702DelegationOperation) -> Self {
             value.clone()
         }
     }
-    impl EvmEip7702DelegationStatus {
-        pub fn builder() -> builder::EvmEip7702DelegationStatus {
+    impl EvmEip7702DelegationOperation {
+        pub fn builder() -> builder::EvmEip7702DelegationOperation {
             Default::default()
         }
     }
@@ -13367,26 +13318,26 @@ pub mod types {
     /// </details>
     #[derive(::serde::Serialize, Clone, Debug, Eq, Hash, Ord, PartialEq, PartialOrd)]
     #[serde(transparent)]
-    pub struct EvmEip7702DelegationStatusDelegateAddress(::std::string::String);
-    impl ::std::ops::Deref for EvmEip7702DelegationStatusDelegateAddress {
+    pub struct EvmEip7702DelegationOperationDelegateAddress(::std::string::String);
+    impl ::std::ops::Deref for EvmEip7702DelegationOperationDelegateAddress {
         type Target = ::std::string::String;
         fn deref(&self) -> &::std::string::String {
             &self.0
         }
     }
-    impl ::std::convert::From<EvmEip7702DelegationStatusDelegateAddress> for ::std::string::String {
-        fn from(value: EvmEip7702DelegationStatusDelegateAddress) -> Self {
+    impl ::std::convert::From<EvmEip7702DelegationOperationDelegateAddress> for ::std::string::String {
+        fn from(value: EvmEip7702DelegationOperationDelegateAddress) -> Self {
             value.0
         }
     }
-    impl ::std::convert::From<&EvmEip7702DelegationStatusDelegateAddress>
-        for EvmEip7702DelegationStatusDelegateAddress
+    impl ::std::convert::From<&EvmEip7702DelegationOperationDelegateAddress>
+        for EvmEip7702DelegationOperationDelegateAddress
     {
-        fn from(value: &EvmEip7702DelegationStatusDelegateAddress) -> Self {
+        fn from(value: &EvmEip7702DelegationOperationDelegateAddress) -> Self {
             value.clone()
         }
     }
-    impl ::std::str::FromStr for EvmEip7702DelegationStatusDelegateAddress {
+    impl ::std::str::FromStr for EvmEip7702DelegationOperationDelegateAddress {
         type Err = self::error::ConversionError;
         fn from_str(value: &str) -> ::std::result::Result<Self, self::error::ConversionError> {
             static PATTERN: ::std::sync::LazyLock<::regress::Regex> =
@@ -13399,13 +13350,15 @@ pub mod types {
             Ok(Self(value.to_string()))
         }
     }
-    impl ::std::convert::TryFrom<&str> for EvmEip7702DelegationStatusDelegateAddress {
+    impl ::std::convert::TryFrom<&str> for EvmEip7702DelegationOperationDelegateAddress {
         type Error = self::error::ConversionError;
         fn try_from(value: &str) -> ::std::result::Result<Self, self::error::ConversionError> {
             value.parse()
         }
     }
-    impl ::std::convert::TryFrom<&::std::string::String> for EvmEip7702DelegationStatusDelegateAddress {
+    impl ::std::convert::TryFrom<&::std::string::String>
+        for EvmEip7702DelegationOperationDelegateAddress
+    {
         type Error = self::error::ConversionError;
         fn try_from(
             value: &::std::string::String,
@@ -13413,7 +13366,9 @@ pub mod types {
             value.parse()
         }
     }
-    impl ::std::convert::TryFrom<::std::string::String> for EvmEip7702DelegationStatusDelegateAddress {
+    impl ::std::convert::TryFrom<::std::string::String>
+        for EvmEip7702DelegationOperationDelegateAddress
+    {
         type Error = self::error::ConversionError;
         fn try_from(
             value: ::std::string::String,
@@ -13421,7 +13376,7 @@ pub mod types {
             value.parse()
         }
     }
-    impl<'de> ::serde::Deserialize<'de> for EvmEip7702DelegationStatusDelegateAddress {
+    impl<'de> ::serde::Deserialize<'de> for EvmEip7702DelegationOperationDelegateAddress {
         fn deserialize<D>(deserializer: D) -> ::std::result::Result<Self, D::Error>
         where
             D: ::serde::Deserializer<'de>,
@@ -13433,23 +13388,24 @@ pub mod types {
                 })
         }
     }
-    /**The current delegation state of the account.
-    CURRENT means the account is fully delegated and initialized. NOT_DELEGATED means the account has no active EIP-7702 delegation. WRONG_PROXY means the account is delegated to an unexpected proxy contract. NOT_INITIALIZED means the account is delegated to the correct proxy but has not been initialized.*/
+    /**The current status of the delegation operation.
+    UNSPECIFIED means the status has not been set. PENDING means the operation has been created but not yet submitted. SUBMITTED means the operation has been submitted to the network. COMPLETED means the operation has completed successfully. FAILED means the operation has failed.*/
     ///
     /// <details><summary>JSON schema</summary>
     ///
     /// ```json
     ///{
-    ///  "description": "The current delegation state of the account.\nCURRENT means the account is fully delegated and initialized. NOT_DELEGATED means the account has no active EIP-7702 delegation. WRONG_PROXY means the account is delegated to an unexpected proxy contract. NOT_INITIALIZED means the account is delegated to the correct proxy but has not been initialized.",
+    ///  "description": "The current status of the delegation operation.\nUNSPECIFIED means the status has not been set. PENDING means the operation has been created but not yet submitted. SUBMITTED means the operation has been submitted to the network. COMPLETED means the operation has completed successfully. FAILED means the operation has failed.",
     ///  "examples": [
-    ///    "CURRENT"
+    ///    "COMPLETED"
     ///  ],
     ///  "type": "string",
     ///  "enum": [
-    ///    "CURRENT",
-    ///    "NOT_DELEGATED",
-    ///    "WRONG_PROXY",
-    ///    "NOT_INITIALIZED"
+    ///    "UNSPECIFIED",
+    ///    "PENDING",
+    ///    "SUBMITTED",
+    ///    "COMPLETED",
+    ///    "FAILED"
     ///  ]
     ///}
     /// ```
@@ -13466,50 +13422,54 @@ pub mod types {
         PartialEq,
         PartialOrd,
     )]
-    pub enum EvmEip7702DelegationStatusStatus {
-        #[serde(rename = "CURRENT")]
-        Current,
-        #[serde(rename = "NOT_DELEGATED")]
-        NotDelegated,
-        #[serde(rename = "WRONG_PROXY")]
-        WrongProxy,
-        #[serde(rename = "NOT_INITIALIZED")]
-        NotInitialized,
+    pub enum EvmEip7702DelegationOperationStatus {
+        #[serde(rename = "UNSPECIFIED")]
+        Unspecified,
+        #[serde(rename = "PENDING")]
+        Pending,
+        #[serde(rename = "SUBMITTED")]
+        Submitted,
+        #[serde(rename = "COMPLETED")]
+        Completed,
+        #[serde(rename = "FAILED")]
+        Failed,
     }
-    impl ::std::convert::From<&Self> for EvmEip7702DelegationStatusStatus {
-        fn from(value: &EvmEip7702DelegationStatusStatus) -> Self {
+    impl ::std::convert::From<&Self> for EvmEip7702DelegationOperationStatus {
+        fn from(value: &EvmEip7702DelegationOperationStatus) -> Self {
             value.clone()
         }
     }
-    impl ::std::fmt::Display for EvmEip7702DelegationStatusStatus {
+    impl ::std::fmt::Display for EvmEip7702DelegationOperationStatus {
         fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
             match *self {
-                Self::Current => f.write_str("CURRENT"),
-                Self::NotDelegated => f.write_str("NOT_DELEGATED"),
-                Self::WrongProxy => f.write_str("WRONG_PROXY"),
-                Self::NotInitialized => f.write_str("NOT_INITIALIZED"),
+                Self::Unspecified => f.write_str("UNSPECIFIED"),
+                Self::Pending => f.write_str("PENDING"),
+                Self::Submitted => f.write_str("SUBMITTED"),
+                Self::Completed => f.write_str("COMPLETED"),
+                Self::Failed => f.write_str("FAILED"),
             }
         }
     }
-    impl ::std::str::FromStr for EvmEip7702DelegationStatusStatus {
+    impl ::std::str::FromStr for EvmEip7702DelegationOperationStatus {
         type Err = self::error::ConversionError;
         fn from_str(value: &str) -> ::std::result::Result<Self, self::error::ConversionError> {
             match value {
-                "CURRENT" => Ok(Self::Current),
-                "NOT_DELEGATED" => Ok(Self::NotDelegated),
-                "WRONG_PROXY" => Ok(Self::WrongProxy),
-                "NOT_INITIALIZED" => Ok(Self::NotInitialized),
+                "UNSPECIFIED" => Ok(Self::Unspecified),
+                "PENDING" => Ok(Self::Pending),
+                "SUBMITTED" => Ok(Self::Submitted),
+                "COMPLETED" => Ok(Self::Completed),
+                "FAILED" => Ok(Self::Failed),
                 _ => Err("invalid value".into()),
             }
         }
     }
-    impl ::std::convert::TryFrom<&str> for EvmEip7702DelegationStatusStatus {
+    impl ::std::convert::TryFrom<&str> for EvmEip7702DelegationOperationStatus {
         type Error = self::error::ConversionError;
         fn try_from(value: &str) -> ::std::result::Result<Self, self::error::ConversionError> {
             value.parse()
         }
     }
-    impl ::std::convert::TryFrom<&::std::string::String> for EvmEip7702DelegationStatusStatus {
+    impl ::std::convert::TryFrom<&::std::string::String> for EvmEip7702DelegationOperationStatus {
         type Error = self::error::ConversionError;
         fn try_from(
             value: &::std::string::String,
@@ -13517,12 +13477,99 @@ pub mod types {
             value.parse()
         }
     }
-    impl ::std::convert::TryFrom<::std::string::String> for EvmEip7702DelegationStatusStatus {
+    impl ::std::convert::TryFrom<::std::string::String> for EvmEip7702DelegationOperationStatus {
         type Error = self::error::ConversionError;
         fn try_from(
             value: ::std::string::String,
         ) -> ::std::result::Result<Self, self::error::ConversionError> {
             value.parse()
+        }
+    }
+    ///The hash of the delegation transaction, if available. Present once the transaction has been submitted to the network.
+    ///
+    /// <details><summary>JSON schema</summary>
+    ///
+    /// ```json
+    ///{
+    ///  "description": "The hash of the delegation transaction, if available. Present once the transaction has been submitted to the network.",
+    ///  "examples": [
+    ///    "0x1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef"
+    ///  ],
+    ///  "type": "string",
+    ///  "pattern": "^0x[0-9a-fA-F]{64}$"
+    ///}
+    /// ```
+    /// </details>
+    #[derive(::serde::Serialize, Clone, Debug, Eq, Hash, Ord, PartialEq, PartialOrd)]
+    #[serde(transparent)]
+    pub struct EvmEip7702DelegationOperationTransactionHash(::std::string::String);
+    impl ::std::ops::Deref for EvmEip7702DelegationOperationTransactionHash {
+        type Target = ::std::string::String;
+        fn deref(&self) -> &::std::string::String {
+            &self.0
+        }
+    }
+    impl ::std::convert::From<EvmEip7702DelegationOperationTransactionHash> for ::std::string::String {
+        fn from(value: EvmEip7702DelegationOperationTransactionHash) -> Self {
+            value.0
+        }
+    }
+    impl ::std::convert::From<&EvmEip7702DelegationOperationTransactionHash>
+        for EvmEip7702DelegationOperationTransactionHash
+    {
+        fn from(value: &EvmEip7702DelegationOperationTransactionHash) -> Self {
+            value.clone()
+        }
+    }
+    impl ::std::str::FromStr for EvmEip7702DelegationOperationTransactionHash {
+        type Err = self::error::ConversionError;
+        fn from_str(value: &str) -> ::std::result::Result<Self, self::error::ConversionError> {
+            static PATTERN: ::std::sync::LazyLock<::regress::Regex> =
+                ::std::sync::LazyLock::new(|| {
+                    ::regress::Regex::new("^0x[0-9a-fA-F]{64}$").unwrap()
+                });
+            if PATTERN.find(value).is_none() {
+                return Err("doesn't match pattern \"^0x[0-9a-fA-F]{64}$\"".into());
+            }
+            Ok(Self(value.to_string()))
+        }
+    }
+    impl ::std::convert::TryFrom<&str> for EvmEip7702DelegationOperationTransactionHash {
+        type Error = self::error::ConversionError;
+        fn try_from(value: &str) -> ::std::result::Result<Self, self::error::ConversionError> {
+            value.parse()
+        }
+    }
+    impl ::std::convert::TryFrom<&::std::string::String>
+        for EvmEip7702DelegationOperationTransactionHash
+    {
+        type Error = self::error::ConversionError;
+        fn try_from(
+            value: &::std::string::String,
+        ) -> ::std::result::Result<Self, self::error::ConversionError> {
+            value.parse()
+        }
+    }
+    impl ::std::convert::TryFrom<::std::string::String>
+        for EvmEip7702DelegationOperationTransactionHash
+    {
+        type Error = self::error::ConversionError;
+        fn try_from(
+            value: ::std::string::String,
+        ) -> ::std::result::Result<Self, self::error::ConversionError> {
+            value.parse()
+        }
+    }
+    impl<'de> ::serde::Deserialize<'de> for EvmEip7702DelegationOperationTransactionHash {
+        fn deserialize<D>(deserializer: D) -> ::std::result::Result<Self, D::Error>
+        where
+            D: ::serde::Deserializer<'de>,
+        {
+            ::std::string::String::deserialize(deserializer)?
+                .parse()
+                .map_err(|e: self::error::ConversionError| {
+                    <D::Error as ::serde::de::Error>::custom(e.to_string())
+                })
         }
     }
     ///A schema for specifying a criterion for the message being signed.
@@ -16747,85 +16794,6 @@ pub mod types {
         }
     }
     impl<'de> ::serde::Deserialize<'de> for GetEvmAccountAddress {
-        fn deserialize<D>(deserializer: D) -> ::std::result::Result<Self, D::Error>
-        where
-            D: ::serde::Deserializer<'de>,
-        {
-            ::std::string::String::deserialize(deserializer)?
-                .parse()
-                .map_err(|e: self::error::ConversionError| {
-                    <D::Error as ::serde::de::Error>::custom(e.to_string())
-                })
-        }
-    }
-    ///`GetEvmEip7702DelegationStatusAddress`
-    ///
-    /// <details><summary>JSON schema</summary>
-    ///
-    /// ```json
-    ///{
-    ///  "type": "string",
-    ///  "pattern": "^0x[0-9a-fA-F]{40}$"
-    ///}
-    /// ```
-    /// </details>
-    #[derive(::serde::Serialize, Clone, Debug, Eq, Hash, Ord, PartialEq, PartialOrd)]
-    #[serde(transparent)]
-    pub struct GetEvmEip7702DelegationStatusAddress(::std::string::String);
-    impl ::std::ops::Deref for GetEvmEip7702DelegationStatusAddress {
-        type Target = ::std::string::String;
-        fn deref(&self) -> &::std::string::String {
-            &self.0
-        }
-    }
-    impl ::std::convert::From<GetEvmEip7702DelegationStatusAddress> for ::std::string::String {
-        fn from(value: GetEvmEip7702DelegationStatusAddress) -> Self {
-            value.0
-        }
-    }
-    impl ::std::convert::From<&GetEvmEip7702DelegationStatusAddress>
-        for GetEvmEip7702DelegationStatusAddress
-    {
-        fn from(value: &GetEvmEip7702DelegationStatusAddress) -> Self {
-            value.clone()
-        }
-    }
-    impl ::std::str::FromStr for GetEvmEip7702DelegationStatusAddress {
-        type Err = self::error::ConversionError;
-        fn from_str(value: &str) -> ::std::result::Result<Self, self::error::ConversionError> {
-            static PATTERN: ::std::sync::LazyLock<::regress::Regex> =
-                ::std::sync::LazyLock::new(|| {
-                    ::regress::Regex::new("^0x[0-9a-fA-F]{40}$").unwrap()
-                });
-            if PATTERN.find(value).is_none() {
-                return Err("doesn't match pattern \"^0x[0-9a-fA-F]{40}$\"".into());
-            }
-            Ok(Self(value.to_string()))
-        }
-    }
-    impl ::std::convert::TryFrom<&str> for GetEvmEip7702DelegationStatusAddress {
-        type Error = self::error::ConversionError;
-        fn try_from(value: &str) -> ::std::result::Result<Self, self::error::ConversionError> {
-            value.parse()
-        }
-    }
-    impl ::std::convert::TryFrom<&::std::string::String> for GetEvmEip7702DelegationStatusAddress {
-        type Error = self::error::ConversionError;
-        fn try_from(
-            value: &::std::string::String,
-        ) -> ::std::result::Result<Self, self::error::ConversionError> {
-            value.parse()
-        }
-    }
-    impl ::std::convert::TryFrom<::std::string::String> for GetEvmEip7702DelegationStatusAddress {
-        type Error = self::error::ConversionError;
-        fn try_from(
-            value: ::std::string::String,
-        ) -> ::std::result::Result<Self, self::error::ConversionError> {
-            value.parse()
-        }
-    }
-    impl<'de> ::serde::Deserialize<'de> for GetEvmEip7702DelegationStatusAddress {
         fn deserialize<D>(deserializer: D) -> ::std::result::Result<Self, D::Error>
         where
             D: ::serde::Deserializer<'de>,
@@ -27239,6 +27207,27 @@ pub mod types {
     ///    },
     ///    {
     ///      "$ref": "#/components/schemas/SendUserOperationRule"
+    ///    },
+    ///    {
+    ///      "$ref": "#/components/schemas/SignEndUserEvmTransactionRule"
+    ///    },
+    ///    {
+    ///      "$ref": "#/components/schemas/SendEndUserEvmTransactionRule"
+    ///    },
+    ///    {
+    ///      "$ref": "#/components/schemas/SignEndUserEvmMessageRule"
+    ///    },
+    ///    {
+    ///      "$ref": "#/components/schemas/SignEndUserEvmTypedDataRule"
+    ///    },
+    ///    {
+    ///      "$ref": "#/components/schemas/SignEndUserSolTransactionRule"
+    ///    },
+    ///    {
+    ///      "$ref": "#/components/schemas/SendEndUserSolTransactionRule"
+    ///    },
+    ///    {
+    ///      "$ref": "#/components/schemas/SignEndUserSolMessageRule"
     ///    }
     ///  ]
     ///}
@@ -27257,6 +27246,13 @@ pub mod types {
         SignEvmHashRule(SignEvmHashRule),
         PrepareUserOperationRule(PrepareUserOperationRule),
         SendUserOperationRule(SendUserOperationRule),
+        SignEndUserEvmTransactionRule(SignEndUserEvmTransactionRule),
+        SendEndUserEvmTransactionRule(SendEndUserEvmTransactionRule),
+        SignEndUserEvmMessageRule(SignEndUserEvmMessageRule),
+        SignEndUserEvmTypedDataRule(SignEndUserEvmTypedDataRule),
+        SignEndUserSolTransactionRule(SignEndUserSolTransactionRule),
+        SendEndUserSolTransactionRule(SendEndUserSolTransactionRule),
+        SignEndUserSolMessageRule(SignEndUserSolMessageRule),
     }
     impl ::std::convert::From<&Self> for Rule {
         fn from(value: &Rule) -> Self {
@@ -27311,6 +27307,880 @@ pub mod types {
     impl ::std::convert::From<SendUserOperationRule> for Rule {
         fn from(value: SendUserOperationRule) -> Self {
             Self::SendUserOperationRule(value)
+        }
+    }
+    impl ::std::convert::From<SignEndUserEvmTransactionRule> for Rule {
+        fn from(value: SignEndUserEvmTransactionRule) -> Self {
+            Self::SignEndUserEvmTransactionRule(value)
+        }
+    }
+    impl ::std::convert::From<SendEndUserEvmTransactionRule> for Rule {
+        fn from(value: SendEndUserEvmTransactionRule) -> Self {
+            Self::SendEndUserEvmTransactionRule(value)
+        }
+    }
+    impl ::std::convert::From<SignEndUserEvmMessageRule> for Rule {
+        fn from(value: SignEndUserEvmMessageRule) -> Self {
+            Self::SignEndUserEvmMessageRule(value)
+        }
+    }
+    impl ::std::convert::From<SignEndUserEvmTypedDataRule> for Rule {
+        fn from(value: SignEndUserEvmTypedDataRule) -> Self {
+            Self::SignEndUserEvmTypedDataRule(value)
+        }
+    }
+    impl ::std::convert::From<SignEndUserSolTransactionRule> for Rule {
+        fn from(value: SignEndUserSolTransactionRule) -> Self {
+            Self::SignEndUserSolTransactionRule(value)
+        }
+    }
+    impl ::std::convert::From<SendEndUserSolTransactionRule> for Rule {
+        fn from(value: SendEndUserSolTransactionRule) -> Self {
+            Self::SendEndUserSolTransactionRule(value)
+        }
+    }
+    impl ::std::convert::From<SignEndUserSolMessageRule> for Rule {
+        fn from(value: SignEndUserSolMessageRule) -> Self {
+            Self::SignEndUserSolMessageRule(value)
+        }
+    }
+    ///A schema for specifying criteria for the sendEndUserEvmTransaction operation.
+    ///
+    /// <details><summary>JSON schema</summary>
+    ///
+    /// ```json
+    ///{
+    ///  "description": "A schema for specifying criteria for the sendEndUserEvmTransaction operation.",
+    ///  "examples": [
+    ///    [
+    ///      {
+    ///        "ethValue": "1000000",
+    ///        "operator": ">=",
+    ///        "type": "ethValue"
+    ///      },
+    ///      {
+    ///        "addresses": [
+    ///          "0x742d35Cc6634C0532925a3b844Bc454e4438f44e"
+    ///        ],
+    ///        "operator": "in",
+    ///        "type": "evmAddress"
+    ///      },
+    ///      {
+    ///        "networks": [
+    ///          "base",
+    ///          "ethereum"
+    ///        ],
+    ///        "operator": "in",
+    ///        "type": "evmNetwork"
+    ///      },
+    ///      {
+    ///        "abi": "erc20",
+    ///        "conditions": [
+    ///          {
+    ///            "function": "transfer",
+    ///            "params": [
+    ///              {
+    ///                "name": "value",
+    ///                "operator": "<=",
+    ///                "value": "10000"
+    ///              }
+    ///            ]
+    ///          }
+    ///        ],
+    ///        "type": "evmData"
+    ///      },
+    ///      {
+    ///        "changeCents": 10000,
+    ///        "operator": "<=",
+    ///        "type": "netUSDChange"
+    ///      }
+    ///    ]
+    ///  ],
+    ///  "type": "array",
+    ///  "items": {
+    ///    "oneOf": [
+    ///      {
+    ///        "$ref": "#/components/schemas/EthValueCriterion"
+    ///      },
+    ///      {
+    ///        "$ref": "#/components/schemas/EvmAddressCriterion"
+    ///      },
+    ///      {
+    ///        "$ref": "#/components/schemas/EvmNetworkCriterion"
+    ///      },
+    ///      {
+    ///        "$ref": "#/components/schemas/EvmDataCriterion"
+    ///      },
+    ///      {
+    ///        "$ref": "#/components/schemas/NetUSDChangeCriterion"
+    ///      }
+    ///    ]
+    ///  },
+    ///  "x-audience": "public"
+    ///}
+    /// ```
+    /// </details>
+    #[derive(::serde::Deserialize, ::serde::Serialize, Clone, Debug)]
+    #[serde(transparent)]
+    pub struct SendEndUserEvmTransactionCriteria(
+        pub ::std::vec::Vec<SendEndUserEvmTransactionCriteriaItem>,
+    );
+    impl ::std::ops::Deref for SendEndUserEvmTransactionCriteria {
+        type Target = ::std::vec::Vec<SendEndUserEvmTransactionCriteriaItem>;
+        fn deref(&self) -> &::std::vec::Vec<SendEndUserEvmTransactionCriteriaItem> {
+            &self.0
+        }
+    }
+    impl ::std::convert::From<SendEndUserEvmTransactionCriteria>
+        for ::std::vec::Vec<SendEndUserEvmTransactionCriteriaItem>
+    {
+        fn from(value: SendEndUserEvmTransactionCriteria) -> Self {
+            value.0
+        }
+    }
+    impl ::std::convert::From<&SendEndUserEvmTransactionCriteria>
+        for SendEndUserEvmTransactionCriteria
+    {
+        fn from(value: &SendEndUserEvmTransactionCriteria) -> Self {
+            value.clone()
+        }
+    }
+    impl ::std::convert::From<::std::vec::Vec<SendEndUserEvmTransactionCriteriaItem>>
+        for SendEndUserEvmTransactionCriteria
+    {
+        fn from(value: ::std::vec::Vec<SendEndUserEvmTransactionCriteriaItem>) -> Self {
+            Self(value)
+        }
+    }
+    ///`SendEndUserEvmTransactionCriteriaItem`
+    ///
+    /// <details><summary>JSON schema</summary>
+    ///
+    /// ```json
+    ///{
+    ///  "oneOf": [
+    ///    {
+    ///      "$ref": "#/components/schemas/EthValueCriterion"
+    ///    },
+    ///    {
+    ///      "$ref": "#/components/schemas/EvmAddressCriterion"
+    ///    },
+    ///    {
+    ///      "$ref": "#/components/schemas/EvmNetworkCriterion"
+    ///    },
+    ///    {
+    ///      "$ref": "#/components/schemas/EvmDataCriterion"
+    ///    },
+    ///    {
+    ///      "$ref": "#/components/schemas/NetUSDChangeCriterion"
+    ///    }
+    ///  ]
+    ///}
+    /// ```
+    /// </details>
+    #[derive(::serde::Deserialize, ::serde::Serialize, Clone, Debug)]
+    #[serde(untagged)]
+    pub enum SendEndUserEvmTransactionCriteriaItem {
+        EthValueCriterion(EthValueCriterion),
+        EvmAddressCriterion(EvmAddressCriterion),
+        EvmNetworkCriterion(EvmNetworkCriterion),
+        EvmDataCriterion(EvmDataCriterion),
+        NetUsdChangeCriterion(NetUsdChangeCriterion),
+    }
+    impl ::std::convert::From<&Self> for SendEndUserEvmTransactionCriteriaItem {
+        fn from(value: &SendEndUserEvmTransactionCriteriaItem) -> Self {
+            value.clone()
+        }
+    }
+    impl ::std::convert::From<EthValueCriterion> for SendEndUserEvmTransactionCriteriaItem {
+        fn from(value: EthValueCriterion) -> Self {
+            Self::EthValueCriterion(value)
+        }
+    }
+    impl ::std::convert::From<EvmAddressCriterion> for SendEndUserEvmTransactionCriteriaItem {
+        fn from(value: EvmAddressCriterion) -> Self {
+            Self::EvmAddressCriterion(value)
+        }
+    }
+    impl ::std::convert::From<EvmNetworkCriterion> for SendEndUserEvmTransactionCriteriaItem {
+        fn from(value: EvmNetworkCriterion) -> Self {
+            Self::EvmNetworkCriterion(value)
+        }
+    }
+    impl ::std::convert::From<EvmDataCriterion> for SendEndUserEvmTransactionCriteriaItem {
+        fn from(value: EvmDataCriterion) -> Self {
+            Self::EvmDataCriterion(value)
+        }
+    }
+    impl ::std::convert::From<NetUsdChangeCriterion> for SendEndUserEvmTransactionCriteriaItem {
+        fn from(value: NetUsdChangeCriterion) -> Self {
+            Self::NetUsdChangeCriterion(value)
+        }
+    }
+    ///`SendEndUserEvmTransactionRule`
+    ///
+    /// <details><summary>JSON schema</summary>
+    ///
+    /// ```json
+    ///{
+    ///  "title": "SendEndUserEvmTransactionRule",
+    ///  "required": [
+    ///    "action",
+    ///    "criteria",
+    ///    "operation"
+    ///  ],
+    ///  "properties": {
+    ///    "action": {
+    ///      "description": "Whether matching the rule will cause the request to be rejected or accepted.",
+    ///      "examples": [
+    ///        "accept"
+    ///      ],
+    ///      "type": "string",
+    ///      "enum": [
+    ///        "reject",
+    ///        "accept"
+    ///      ]
+    ///    },
+    ///    "criteria": {
+    ///      "$ref": "#/components/schemas/SendEndUserEvmTransactionCriteria"
+    ///    },
+    ///    "operation": {
+    ///      "description": "The operation to which the rule applies. Every element of the `criteria` array must match the specified operation.",
+    ///      "examples": [
+    ///        "sendEndUserEvmTransaction"
+    ///      ],
+    ///      "type": "string",
+    ///      "enum": [
+    ///        "sendEndUserEvmTransaction"
+    ///      ]
+    ///    }
+    ///  },
+    ///  "x-audience": "public"
+    ///}
+    /// ```
+    /// </details>
+    #[derive(::serde::Deserialize, ::serde::Serialize, Clone, Debug)]
+    pub struct SendEndUserEvmTransactionRule {
+        ///Whether matching the rule will cause the request to be rejected or accepted.
+        pub action: SendEndUserEvmTransactionRuleAction,
+        pub criteria: SendEndUserEvmTransactionCriteria,
+        ///The operation to which the rule applies. Every element of the `criteria` array must match the specified operation.
+        pub operation: SendEndUserEvmTransactionRuleOperation,
+    }
+    impl ::std::convert::From<&SendEndUserEvmTransactionRule> for SendEndUserEvmTransactionRule {
+        fn from(value: &SendEndUserEvmTransactionRule) -> Self {
+            value.clone()
+        }
+    }
+    impl SendEndUserEvmTransactionRule {
+        pub fn builder() -> builder::SendEndUserEvmTransactionRule {
+            Default::default()
+        }
+    }
+    ///Whether matching the rule will cause the request to be rejected or accepted.
+    ///
+    /// <details><summary>JSON schema</summary>
+    ///
+    /// ```json
+    ///{
+    ///  "description": "Whether matching the rule will cause the request to be rejected or accepted.",
+    ///  "examples": [
+    ///    "accept"
+    ///  ],
+    ///  "type": "string",
+    ///  "enum": [
+    ///    "reject",
+    ///    "accept"
+    ///  ]
+    ///}
+    /// ```
+    /// </details>
+    #[derive(
+        ::serde::Deserialize,
+        ::serde::Serialize,
+        Clone,
+        Copy,
+        Debug,
+        Eq,
+        Hash,
+        Ord,
+        PartialEq,
+        PartialOrd,
+    )]
+    pub enum SendEndUserEvmTransactionRuleAction {
+        #[serde(rename = "reject")]
+        Reject,
+        #[serde(rename = "accept")]
+        Accept,
+    }
+    impl ::std::convert::From<&Self> for SendEndUserEvmTransactionRuleAction {
+        fn from(value: &SendEndUserEvmTransactionRuleAction) -> Self {
+            value.clone()
+        }
+    }
+    impl ::std::fmt::Display for SendEndUserEvmTransactionRuleAction {
+        fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
+            match *self {
+                Self::Reject => f.write_str("reject"),
+                Self::Accept => f.write_str("accept"),
+            }
+        }
+    }
+    impl ::std::str::FromStr for SendEndUserEvmTransactionRuleAction {
+        type Err = self::error::ConversionError;
+        fn from_str(value: &str) -> ::std::result::Result<Self, self::error::ConversionError> {
+            match value {
+                "reject" => Ok(Self::Reject),
+                "accept" => Ok(Self::Accept),
+                _ => Err("invalid value".into()),
+            }
+        }
+    }
+    impl ::std::convert::TryFrom<&str> for SendEndUserEvmTransactionRuleAction {
+        type Error = self::error::ConversionError;
+        fn try_from(value: &str) -> ::std::result::Result<Self, self::error::ConversionError> {
+            value.parse()
+        }
+    }
+    impl ::std::convert::TryFrom<&::std::string::String> for SendEndUserEvmTransactionRuleAction {
+        type Error = self::error::ConversionError;
+        fn try_from(
+            value: &::std::string::String,
+        ) -> ::std::result::Result<Self, self::error::ConversionError> {
+            value.parse()
+        }
+    }
+    impl ::std::convert::TryFrom<::std::string::String> for SendEndUserEvmTransactionRuleAction {
+        type Error = self::error::ConversionError;
+        fn try_from(
+            value: ::std::string::String,
+        ) -> ::std::result::Result<Self, self::error::ConversionError> {
+            value.parse()
+        }
+    }
+    ///The operation to which the rule applies. Every element of the `criteria` array must match the specified operation.
+    ///
+    /// <details><summary>JSON schema</summary>
+    ///
+    /// ```json
+    ///{
+    ///  "description": "The operation to which the rule applies. Every element of the `criteria` array must match the specified operation.",
+    ///  "examples": [
+    ///    "sendEndUserEvmTransaction"
+    ///  ],
+    ///  "type": "string",
+    ///  "enum": [
+    ///    "sendEndUserEvmTransaction"
+    ///  ]
+    ///}
+    /// ```
+    /// </details>
+    #[derive(
+        ::serde::Deserialize,
+        ::serde::Serialize,
+        Clone,
+        Copy,
+        Debug,
+        Eq,
+        Hash,
+        Ord,
+        PartialEq,
+        PartialOrd,
+    )]
+    pub enum SendEndUserEvmTransactionRuleOperation {
+        #[serde(rename = "sendEndUserEvmTransaction")]
+        SendEndUserEvmTransaction,
+    }
+    impl ::std::convert::From<&Self> for SendEndUserEvmTransactionRuleOperation {
+        fn from(value: &SendEndUserEvmTransactionRuleOperation) -> Self {
+            value.clone()
+        }
+    }
+    impl ::std::fmt::Display for SendEndUserEvmTransactionRuleOperation {
+        fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
+            match *self {
+                Self::SendEndUserEvmTransaction => f.write_str("sendEndUserEvmTransaction"),
+            }
+        }
+    }
+    impl ::std::str::FromStr for SendEndUserEvmTransactionRuleOperation {
+        type Err = self::error::ConversionError;
+        fn from_str(value: &str) -> ::std::result::Result<Self, self::error::ConversionError> {
+            match value {
+                "sendEndUserEvmTransaction" => Ok(Self::SendEndUserEvmTransaction),
+                _ => Err("invalid value".into()),
+            }
+        }
+    }
+    impl ::std::convert::TryFrom<&str> for SendEndUserEvmTransactionRuleOperation {
+        type Error = self::error::ConversionError;
+        fn try_from(value: &str) -> ::std::result::Result<Self, self::error::ConversionError> {
+            value.parse()
+        }
+    }
+    impl ::std::convert::TryFrom<&::std::string::String> for SendEndUserEvmTransactionRuleOperation {
+        type Error = self::error::ConversionError;
+        fn try_from(
+            value: &::std::string::String,
+        ) -> ::std::result::Result<Self, self::error::ConversionError> {
+            value.parse()
+        }
+    }
+    impl ::std::convert::TryFrom<::std::string::String> for SendEndUserEvmTransactionRuleOperation {
+        type Error = self::error::ConversionError;
+        fn try_from(
+            value: ::std::string::String,
+        ) -> ::std::result::Result<Self, self::error::ConversionError> {
+            value.parse()
+        }
+    }
+    ///A schema for specifying criteria for the sendEndUserSolTransaction operation.
+    ///
+    /// <details><summary>JSON schema</summary>
+    ///
+    /// ```json
+    ///{
+    ///  "description": "A schema for specifying criteria for the sendEndUserSolTransaction operation.",
+    ///  "examples": [
+    ///    [
+    ///      {
+    ///        "addresses": [
+    ///          "HpabPRRCFbBKSuJr5PdkVvQc85FyxyTWkFM2obBRSvHT"
+    ///        ],
+    ///        "operator": "in",
+    ///        "type": "solAddress"
+    ///      },
+    ///      {
+    ///        "operator": "<=",
+    ///        "solValue": "1000000000000000000",
+    ///        "type": "solValue"
+    ///      },
+    ///      {
+    ///        "addresses": [
+    ///          "HpabPRRCFbBKSuJr5PdkVvQc85FyxyTWkFM2obBRSvHT"
+    ///        ],
+    ///        "operator": "in",
+    ///        "type": "splAddress"
+    ///      },
+    ///      {
+    ///        "operator": "<=",
+    ///        "splValue": "1000000000000000000",
+    ///        "type": "splValue"
+    ///      },
+    ///      {
+    ///        "addresses": [
+    ///          "HpabPRRCFbBKSuJr5PdkVvQc85FyxyTWkFM2obBRSvHT"
+    ///        ],
+    ///        "operator": "in",
+    ///        "type": "mintAddress"
+    ///      },
+    ///      {
+    ///        "conditions": [
+    ///          {
+    ///            "instruction": "transfer_checked",
+    ///            "params": [
+    ///              {
+    ///                "name": "lamports",
+    ///                "operator": "<=",
+    ///                "value": "1000000"
+    ///              }
+    ///            ]
+    ///          }
+    ///        ],
+    ///        "idls": [
+    ///          "SystemProgram"
+    ///        ],
+    ///        "type": "solData"
+    ///      },
+    ///      {
+    ///        "operator": "in",
+    ///        "programIds": [
+    ///          "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
+    ///        ],
+    ///        "type": "programId"
+    ///      },
+    ///      {
+    ///        "networks": [
+    ///          "solana-devnet",
+    ///          "solana"
+    ///        ],
+    ///        "operator": "in",
+    ///        "type": "solNetwork"
+    ///      }
+    ///    ]
+    ///  ],
+    ///  "type": "array",
+    ///  "items": {
+    ///    "oneOf": [
+    ///      {
+    ///        "$ref": "#/components/schemas/SolAddressCriterion"
+    ///      },
+    ///      {
+    ///        "$ref": "#/components/schemas/SolValueCriterion"
+    ///      },
+    ///      {
+    ///        "$ref": "#/components/schemas/SplAddressCriterion"
+    ///      },
+    ///      {
+    ///        "$ref": "#/components/schemas/SplValueCriterion"
+    ///      },
+    ///      {
+    ///        "$ref": "#/components/schemas/MintAddressCriterion"
+    ///      },
+    ///      {
+    ///        "$ref": "#/components/schemas/SolDataCriterion"
+    ///      },
+    ///      {
+    ///        "$ref": "#/components/schemas/ProgramIdCriterion"
+    ///      },
+    ///      {
+    ///        "$ref": "#/components/schemas/SolNetworkCriterion"
+    ///      }
+    ///    ]
+    ///  },
+    ///  "x-audience": "public"
+    ///}
+    /// ```
+    /// </details>
+    #[derive(::serde::Deserialize, ::serde::Serialize, Clone, Debug)]
+    #[serde(transparent)]
+    pub struct SendEndUserSolTransactionCriteria(
+        pub ::std::vec::Vec<SendEndUserSolTransactionCriteriaItem>,
+    );
+    impl ::std::ops::Deref for SendEndUserSolTransactionCriteria {
+        type Target = ::std::vec::Vec<SendEndUserSolTransactionCriteriaItem>;
+        fn deref(&self) -> &::std::vec::Vec<SendEndUserSolTransactionCriteriaItem> {
+            &self.0
+        }
+    }
+    impl ::std::convert::From<SendEndUserSolTransactionCriteria>
+        for ::std::vec::Vec<SendEndUserSolTransactionCriteriaItem>
+    {
+        fn from(value: SendEndUserSolTransactionCriteria) -> Self {
+            value.0
+        }
+    }
+    impl ::std::convert::From<&SendEndUserSolTransactionCriteria>
+        for SendEndUserSolTransactionCriteria
+    {
+        fn from(value: &SendEndUserSolTransactionCriteria) -> Self {
+            value.clone()
+        }
+    }
+    impl ::std::convert::From<::std::vec::Vec<SendEndUserSolTransactionCriteriaItem>>
+        for SendEndUserSolTransactionCriteria
+    {
+        fn from(value: ::std::vec::Vec<SendEndUserSolTransactionCriteriaItem>) -> Self {
+            Self(value)
+        }
+    }
+    ///`SendEndUserSolTransactionCriteriaItem`
+    ///
+    /// <details><summary>JSON schema</summary>
+    ///
+    /// ```json
+    ///{
+    ///  "oneOf": [
+    ///    {
+    ///      "$ref": "#/components/schemas/SolAddressCriterion"
+    ///    },
+    ///    {
+    ///      "$ref": "#/components/schemas/SolValueCriterion"
+    ///    },
+    ///    {
+    ///      "$ref": "#/components/schemas/SplAddressCriterion"
+    ///    },
+    ///    {
+    ///      "$ref": "#/components/schemas/SplValueCriterion"
+    ///    },
+    ///    {
+    ///      "$ref": "#/components/schemas/MintAddressCriterion"
+    ///    },
+    ///    {
+    ///      "$ref": "#/components/schemas/SolDataCriterion"
+    ///    },
+    ///    {
+    ///      "$ref": "#/components/schemas/ProgramIdCriterion"
+    ///    },
+    ///    {
+    ///      "$ref": "#/components/schemas/SolNetworkCriterion"
+    ///    }
+    ///  ]
+    ///}
+    /// ```
+    /// </details>
+    #[derive(::serde::Deserialize, ::serde::Serialize, Clone, Debug)]
+    #[serde(untagged)]
+    pub enum SendEndUserSolTransactionCriteriaItem {
+        SolAddressCriterion(SolAddressCriterion),
+        SolValueCriterion(SolValueCriterion),
+        SplAddressCriterion(SplAddressCriterion),
+        SplValueCriterion(SplValueCriterion),
+        MintAddressCriterion(MintAddressCriterion),
+        SolDataCriterion(SolDataCriterion),
+        ProgramIdCriterion(ProgramIdCriterion),
+        SolNetworkCriterion(SolNetworkCriterion),
+    }
+    impl ::std::convert::From<&Self> for SendEndUserSolTransactionCriteriaItem {
+        fn from(value: &SendEndUserSolTransactionCriteriaItem) -> Self {
+            value.clone()
+        }
+    }
+    impl ::std::convert::From<SolAddressCriterion> for SendEndUserSolTransactionCriteriaItem {
+        fn from(value: SolAddressCriterion) -> Self {
+            Self::SolAddressCriterion(value)
+        }
+    }
+    impl ::std::convert::From<SolValueCriterion> for SendEndUserSolTransactionCriteriaItem {
+        fn from(value: SolValueCriterion) -> Self {
+            Self::SolValueCriterion(value)
+        }
+    }
+    impl ::std::convert::From<SplAddressCriterion> for SendEndUserSolTransactionCriteriaItem {
+        fn from(value: SplAddressCriterion) -> Self {
+            Self::SplAddressCriterion(value)
+        }
+    }
+    impl ::std::convert::From<SplValueCriterion> for SendEndUserSolTransactionCriteriaItem {
+        fn from(value: SplValueCriterion) -> Self {
+            Self::SplValueCriterion(value)
+        }
+    }
+    impl ::std::convert::From<MintAddressCriterion> for SendEndUserSolTransactionCriteriaItem {
+        fn from(value: MintAddressCriterion) -> Self {
+            Self::MintAddressCriterion(value)
+        }
+    }
+    impl ::std::convert::From<SolDataCriterion> for SendEndUserSolTransactionCriteriaItem {
+        fn from(value: SolDataCriterion) -> Self {
+            Self::SolDataCriterion(value)
+        }
+    }
+    impl ::std::convert::From<ProgramIdCriterion> for SendEndUserSolTransactionCriteriaItem {
+        fn from(value: ProgramIdCriterion) -> Self {
+            Self::ProgramIdCriterion(value)
+        }
+    }
+    impl ::std::convert::From<SolNetworkCriterion> for SendEndUserSolTransactionCriteriaItem {
+        fn from(value: SolNetworkCriterion) -> Self {
+            Self::SolNetworkCriterion(value)
+        }
+    }
+    ///`SendEndUserSolTransactionRule`
+    ///
+    /// <details><summary>JSON schema</summary>
+    ///
+    /// ```json
+    ///{
+    ///  "title": "SendEndUserSolTransactionRule",
+    ///  "required": [
+    ///    "action",
+    ///    "criteria",
+    ///    "operation"
+    ///  ],
+    ///  "properties": {
+    ///    "action": {
+    ///      "description": "Whether matching the rule will cause the request to be rejected or accepted.",
+    ///      "examples": [
+    ///        "accept"
+    ///      ],
+    ///      "type": "string",
+    ///      "enum": [
+    ///        "reject",
+    ///        "accept"
+    ///      ]
+    ///    },
+    ///    "criteria": {
+    ///      "$ref": "#/components/schemas/SendEndUserSolTransactionCriteria"
+    ///    },
+    ///    "operation": {
+    ///      "description": "The operation to which the rule applies. Every element of the `criteria` array must match the specified operation.",
+    ///      "examples": [
+    ///        "sendEndUserSolTransaction"
+    ///      ],
+    ///      "type": "string",
+    ///      "enum": [
+    ///        "sendEndUserSolTransaction"
+    ///      ]
+    ///    }
+    ///  },
+    ///  "x-audience": "public"
+    ///}
+    /// ```
+    /// </details>
+    #[derive(::serde::Deserialize, ::serde::Serialize, Clone, Debug)]
+    pub struct SendEndUserSolTransactionRule {
+        ///Whether matching the rule will cause the request to be rejected or accepted.
+        pub action: SendEndUserSolTransactionRuleAction,
+        pub criteria: SendEndUserSolTransactionCriteria,
+        ///The operation to which the rule applies. Every element of the `criteria` array must match the specified operation.
+        pub operation: SendEndUserSolTransactionRuleOperation,
+    }
+    impl ::std::convert::From<&SendEndUserSolTransactionRule> for SendEndUserSolTransactionRule {
+        fn from(value: &SendEndUserSolTransactionRule) -> Self {
+            value.clone()
+        }
+    }
+    impl SendEndUserSolTransactionRule {
+        pub fn builder() -> builder::SendEndUserSolTransactionRule {
+            Default::default()
+        }
+    }
+    ///Whether matching the rule will cause the request to be rejected or accepted.
+    ///
+    /// <details><summary>JSON schema</summary>
+    ///
+    /// ```json
+    ///{
+    ///  "description": "Whether matching the rule will cause the request to be rejected or accepted.",
+    ///  "examples": [
+    ///    "accept"
+    ///  ],
+    ///  "type": "string",
+    ///  "enum": [
+    ///    "reject",
+    ///    "accept"
+    ///  ]
+    ///}
+    /// ```
+    /// </details>
+    #[derive(
+        ::serde::Deserialize,
+        ::serde::Serialize,
+        Clone,
+        Copy,
+        Debug,
+        Eq,
+        Hash,
+        Ord,
+        PartialEq,
+        PartialOrd,
+    )]
+    pub enum SendEndUserSolTransactionRuleAction {
+        #[serde(rename = "reject")]
+        Reject,
+        #[serde(rename = "accept")]
+        Accept,
+    }
+    impl ::std::convert::From<&Self> for SendEndUserSolTransactionRuleAction {
+        fn from(value: &SendEndUserSolTransactionRuleAction) -> Self {
+            value.clone()
+        }
+    }
+    impl ::std::fmt::Display for SendEndUserSolTransactionRuleAction {
+        fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
+            match *self {
+                Self::Reject => f.write_str("reject"),
+                Self::Accept => f.write_str("accept"),
+            }
+        }
+    }
+    impl ::std::str::FromStr for SendEndUserSolTransactionRuleAction {
+        type Err = self::error::ConversionError;
+        fn from_str(value: &str) -> ::std::result::Result<Self, self::error::ConversionError> {
+            match value {
+                "reject" => Ok(Self::Reject),
+                "accept" => Ok(Self::Accept),
+                _ => Err("invalid value".into()),
+            }
+        }
+    }
+    impl ::std::convert::TryFrom<&str> for SendEndUserSolTransactionRuleAction {
+        type Error = self::error::ConversionError;
+        fn try_from(value: &str) -> ::std::result::Result<Self, self::error::ConversionError> {
+            value.parse()
+        }
+    }
+    impl ::std::convert::TryFrom<&::std::string::String> for SendEndUserSolTransactionRuleAction {
+        type Error = self::error::ConversionError;
+        fn try_from(
+            value: &::std::string::String,
+        ) -> ::std::result::Result<Self, self::error::ConversionError> {
+            value.parse()
+        }
+    }
+    impl ::std::convert::TryFrom<::std::string::String> for SendEndUserSolTransactionRuleAction {
+        type Error = self::error::ConversionError;
+        fn try_from(
+            value: ::std::string::String,
+        ) -> ::std::result::Result<Self, self::error::ConversionError> {
+            value.parse()
+        }
+    }
+    ///The operation to which the rule applies. Every element of the `criteria` array must match the specified operation.
+    ///
+    /// <details><summary>JSON schema</summary>
+    ///
+    /// ```json
+    ///{
+    ///  "description": "The operation to which the rule applies. Every element of the `criteria` array must match the specified operation.",
+    ///  "examples": [
+    ///    "sendEndUserSolTransaction"
+    ///  ],
+    ///  "type": "string",
+    ///  "enum": [
+    ///    "sendEndUserSolTransaction"
+    ///  ]
+    ///}
+    /// ```
+    /// </details>
+    #[derive(
+        ::serde::Deserialize,
+        ::serde::Serialize,
+        Clone,
+        Copy,
+        Debug,
+        Eq,
+        Hash,
+        Ord,
+        PartialEq,
+        PartialOrd,
+    )]
+    pub enum SendEndUserSolTransactionRuleOperation {
+        #[serde(rename = "sendEndUserSolTransaction")]
+        SendEndUserSolTransaction,
+    }
+    impl ::std::convert::From<&Self> for SendEndUserSolTransactionRuleOperation {
+        fn from(value: &SendEndUserSolTransactionRuleOperation) -> Self {
+            value.clone()
+        }
+    }
+    impl ::std::fmt::Display for SendEndUserSolTransactionRuleOperation {
+        fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
+            match *self {
+                Self::SendEndUserSolTransaction => f.write_str("sendEndUserSolTransaction"),
+            }
+        }
+    }
+    impl ::std::str::FromStr for SendEndUserSolTransactionRuleOperation {
+        type Err = self::error::ConversionError;
+        fn from_str(value: &str) -> ::std::result::Result<Self, self::error::ConversionError> {
+            match value {
+                "sendEndUserSolTransaction" => Ok(Self::SendEndUserSolTransaction),
+                _ => Err("invalid value".into()),
+            }
+        }
+    }
+    impl ::std::convert::TryFrom<&str> for SendEndUserSolTransactionRuleOperation {
+        type Error = self::error::ConversionError;
+        fn try_from(value: &str) -> ::std::result::Result<Self, self::error::ConversionError> {
+            value.parse()
+        }
+    }
+    impl ::std::convert::TryFrom<&::std::string::String> for SendEndUserSolTransactionRuleOperation {
+        type Error = self::error::ConversionError;
+        fn try_from(
+            value: &::std::string::String,
+        ) -> ::std::result::Result<Self, self::error::ConversionError> {
+            value.parse()
+        }
+    }
+    impl ::std::convert::TryFrom<::std::string::String> for SendEndUserSolTransactionRuleOperation {
+        type Error = self::error::ConversionError;
+        fn try_from(
+            value: ::std::string::String,
+        ) -> ::std::result::Result<Self, self::error::ConversionError> {
+            value.parse()
         }
     }
     ///`SendEvmTransactionAddress`
@@ -29529,6 +30399,1715 @@ pub mod types {
                 .map_err(|e: self::error::ConversionError| {
                     <D::Error as ::serde::de::Error>::custom(e.to_string())
                 })
+        }
+    }
+    ///A schema for specifying criteria for the signEndUserEvmMessage operation.
+    ///
+    /// <details><summary>JSON schema</summary>
+    ///
+    /// ```json
+    ///{
+    ///  "description": "A schema for specifying criteria for the signEndUserEvmMessage operation.",
+    ///  "examples": [
+    ///    [
+    ///      {
+    ///        "match": "^hello ([a-z]+)$",
+    ///        "type": "evmMessage"
+    ///      }
+    ///    ]
+    ///  ],
+    ///  "type": "array",
+    ///  "items": {
+    ///    "oneOf": [
+    ///      {
+    ///        "$ref": "#/components/schemas/EvmMessageCriterion"
+    ///      }
+    ///    ]
+    ///  },
+    ///  "x-audience": "public"
+    ///}
+    /// ```
+    /// </details>
+    #[derive(::serde::Deserialize, ::serde::Serialize, Clone, Debug)]
+    #[serde(transparent)]
+    pub struct SignEndUserEvmMessageCriteria(pub ::std::vec::Vec<EvmMessageCriterion>);
+    impl ::std::ops::Deref for SignEndUserEvmMessageCriteria {
+        type Target = ::std::vec::Vec<EvmMessageCriterion>;
+        fn deref(&self) -> &::std::vec::Vec<EvmMessageCriterion> {
+            &self.0
+        }
+    }
+    impl ::std::convert::From<SignEndUserEvmMessageCriteria> for ::std::vec::Vec<EvmMessageCriterion> {
+        fn from(value: SignEndUserEvmMessageCriteria) -> Self {
+            value.0
+        }
+    }
+    impl ::std::convert::From<&SignEndUserEvmMessageCriteria> for SignEndUserEvmMessageCriteria {
+        fn from(value: &SignEndUserEvmMessageCriteria) -> Self {
+            value.clone()
+        }
+    }
+    impl ::std::convert::From<::std::vec::Vec<EvmMessageCriterion>> for SignEndUserEvmMessageCriteria {
+        fn from(value: ::std::vec::Vec<EvmMessageCriterion>) -> Self {
+            Self(value)
+        }
+    }
+    ///`SignEndUserEvmMessageRule`
+    ///
+    /// <details><summary>JSON schema</summary>
+    ///
+    /// ```json
+    ///{
+    ///  "title": "SignEndUserEvmMessageRule",
+    ///  "required": [
+    ///    "action",
+    ///    "criteria",
+    ///    "operation"
+    ///  ],
+    ///  "properties": {
+    ///    "action": {
+    ///      "description": "Whether matching the rule will cause the request to be rejected or accepted.",
+    ///      "examples": [
+    ///        "accept"
+    ///      ],
+    ///      "type": "string",
+    ///      "enum": [
+    ///        "reject",
+    ///        "accept"
+    ///      ]
+    ///    },
+    ///    "criteria": {
+    ///      "$ref": "#/components/schemas/SignEndUserEvmMessageCriteria"
+    ///    },
+    ///    "operation": {
+    ///      "description": "The operation to which the rule applies. Every element of the `criteria` array must match the specified operation.",
+    ///      "examples": [
+    ///        "signEndUserEvmMessage"
+    ///      ],
+    ///      "type": "string",
+    ///      "enum": [
+    ///        "signEndUserEvmMessage"
+    ///      ]
+    ///    }
+    ///  },
+    ///  "x-audience": "public"
+    ///}
+    /// ```
+    /// </details>
+    #[derive(::serde::Deserialize, ::serde::Serialize, Clone, Debug)]
+    pub struct SignEndUserEvmMessageRule {
+        ///Whether matching the rule will cause the request to be rejected or accepted.
+        pub action: SignEndUserEvmMessageRuleAction,
+        pub criteria: SignEndUserEvmMessageCriteria,
+        ///The operation to which the rule applies. Every element of the `criteria` array must match the specified operation.
+        pub operation: SignEndUserEvmMessageRuleOperation,
+    }
+    impl ::std::convert::From<&SignEndUserEvmMessageRule> for SignEndUserEvmMessageRule {
+        fn from(value: &SignEndUserEvmMessageRule) -> Self {
+            value.clone()
+        }
+    }
+    impl SignEndUserEvmMessageRule {
+        pub fn builder() -> builder::SignEndUserEvmMessageRule {
+            Default::default()
+        }
+    }
+    ///Whether matching the rule will cause the request to be rejected or accepted.
+    ///
+    /// <details><summary>JSON schema</summary>
+    ///
+    /// ```json
+    ///{
+    ///  "description": "Whether matching the rule will cause the request to be rejected or accepted.",
+    ///  "examples": [
+    ///    "accept"
+    ///  ],
+    ///  "type": "string",
+    ///  "enum": [
+    ///    "reject",
+    ///    "accept"
+    ///  ]
+    ///}
+    /// ```
+    /// </details>
+    #[derive(
+        ::serde::Deserialize,
+        ::serde::Serialize,
+        Clone,
+        Copy,
+        Debug,
+        Eq,
+        Hash,
+        Ord,
+        PartialEq,
+        PartialOrd,
+    )]
+    pub enum SignEndUserEvmMessageRuleAction {
+        #[serde(rename = "reject")]
+        Reject,
+        #[serde(rename = "accept")]
+        Accept,
+    }
+    impl ::std::convert::From<&Self> for SignEndUserEvmMessageRuleAction {
+        fn from(value: &SignEndUserEvmMessageRuleAction) -> Self {
+            value.clone()
+        }
+    }
+    impl ::std::fmt::Display for SignEndUserEvmMessageRuleAction {
+        fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
+            match *self {
+                Self::Reject => f.write_str("reject"),
+                Self::Accept => f.write_str("accept"),
+            }
+        }
+    }
+    impl ::std::str::FromStr for SignEndUserEvmMessageRuleAction {
+        type Err = self::error::ConversionError;
+        fn from_str(value: &str) -> ::std::result::Result<Self, self::error::ConversionError> {
+            match value {
+                "reject" => Ok(Self::Reject),
+                "accept" => Ok(Self::Accept),
+                _ => Err("invalid value".into()),
+            }
+        }
+    }
+    impl ::std::convert::TryFrom<&str> for SignEndUserEvmMessageRuleAction {
+        type Error = self::error::ConversionError;
+        fn try_from(value: &str) -> ::std::result::Result<Self, self::error::ConversionError> {
+            value.parse()
+        }
+    }
+    impl ::std::convert::TryFrom<&::std::string::String> for SignEndUserEvmMessageRuleAction {
+        type Error = self::error::ConversionError;
+        fn try_from(
+            value: &::std::string::String,
+        ) -> ::std::result::Result<Self, self::error::ConversionError> {
+            value.parse()
+        }
+    }
+    impl ::std::convert::TryFrom<::std::string::String> for SignEndUserEvmMessageRuleAction {
+        type Error = self::error::ConversionError;
+        fn try_from(
+            value: ::std::string::String,
+        ) -> ::std::result::Result<Self, self::error::ConversionError> {
+            value.parse()
+        }
+    }
+    ///The operation to which the rule applies. Every element of the `criteria` array must match the specified operation.
+    ///
+    /// <details><summary>JSON schema</summary>
+    ///
+    /// ```json
+    ///{
+    ///  "description": "The operation to which the rule applies. Every element of the `criteria` array must match the specified operation.",
+    ///  "examples": [
+    ///    "signEndUserEvmMessage"
+    ///  ],
+    ///  "type": "string",
+    ///  "enum": [
+    ///    "signEndUserEvmMessage"
+    ///  ]
+    ///}
+    /// ```
+    /// </details>
+    #[derive(
+        ::serde::Deserialize,
+        ::serde::Serialize,
+        Clone,
+        Copy,
+        Debug,
+        Eq,
+        Hash,
+        Ord,
+        PartialEq,
+        PartialOrd,
+    )]
+    pub enum SignEndUserEvmMessageRuleOperation {
+        #[serde(rename = "signEndUserEvmMessage")]
+        SignEndUserEvmMessage,
+    }
+    impl ::std::convert::From<&Self> for SignEndUserEvmMessageRuleOperation {
+        fn from(value: &SignEndUserEvmMessageRuleOperation) -> Self {
+            value.clone()
+        }
+    }
+    impl ::std::fmt::Display for SignEndUserEvmMessageRuleOperation {
+        fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
+            match *self {
+                Self::SignEndUserEvmMessage => f.write_str("signEndUserEvmMessage"),
+            }
+        }
+    }
+    impl ::std::str::FromStr for SignEndUserEvmMessageRuleOperation {
+        type Err = self::error::ConversionError;
+        fn from_str(value: &str) -> ::std::result::Result<Self, self::error::ConversionError> {
+            match value {
+                "signEndUserEvmMessage" => Ok(Self::SignEndUserEvmMessage),
+                _ => Err("invalid value".into()),
+            }
+        }
+    }
+    impl ::std::convert::TryFrom<&str> for SignEndUserEvmMessageRuleOperation {
+        type Error = self::error::ConversionError;
+        fn try_from(value: &str) -> ::std::result::Result<Self, self::error::ConversionError> {
+            value.parse()
+        }
+    }
+    impl ::std::convert::TryFrom<&::std::string::String> for SignEndUserEvmMessageRuleOperation {
+        type Error = self::error::ConversionError;
+        fn try_from(
+            value: &::std::string::String,
+        ) -> ::std::result::Result<Self, self::error::ConversionError> {
+            value.parse()
+        }
+    }
+    impl ::std::convert::TryFrom<::std::string::String> for SignEndUserEvmMessageRuleOperation {
+        type Error = self::error::ConversionError;
+        fn try_from(
+            value: ::std::string::String,
+        ) -> ::std::result::Result<Self, self::error::ConversionError> {
+            value.parse()
+        }
+    }
+    ///A schema for specifying criteria for the signEndUserEvmTransaction operation.
+    ///
+    /// <details><summary>JSON schema</summary>
+    ///
+    /// ```json
+    ///{
+    ///  "description": "A schema for specifying criteria for the signEndUserEvmTransaction operation.",
+    ///  "examples": [
+    ///    [
+    ///      {
+    ///        "ethValue": "1000000",
+    ///        "operator": ">=",
+    ///        "type": "ethValue"
+    ///      },
+    ///      {
+    ///        "addresses": [
+    ///          "0x742d35Cc6634C0532925a3b844Bc454e4438f44e"
+    ///        ],
+    ///        "operator": "in",
+    ///        "type": "evmAddress"
+    ///      },
+    ///      {
+    ///        "abi": "erc20",
+    ///        "conditions": [
+    ///          {
+    ///            "function": "transfer",
+    ///            "params": [
+    ///              {
+    ///                "name": "value",
+    ///                "operator": "<=",
+    ///                "value": "10000"
+    ///              }
+    ///            ]
+    ///          }
+    ///        ],
+    ///        "type": "evmData"
+    ///      },
+    ///      {
+    ///        "changeCents": 10000,
+    ///        "operator": "<=",
+    ///        "type": "netUSDChange"
+    ///      }
+    ///    ]
+    ///  ],
+    ///  "type": "array",
+    ///  "items": {
+    ///    "oneOf": [
+    ///      {
+    ///        "$ref": "#/components/schemas/EthValueCriterion"
+    ///      },
+    ///      {
+    ///        "$ref": "#/components/schemas/EvmAddressCriterion"
+    ///      },
+    ///      {
+    ///        "$ref": "#/components/schemas/EvmDataCriterion"
+    ///      },
+    ///      {
+    ///        "$ref": "#/components/schemas/NetUSDChangeCriterion"
+    ///      }
+    ///    ]
+    ///  },
+    ///  "x-audience": "public"
+    ///}
+    /// ```
+    /// </details>
+    #[derive(::serde::Deserialize, ::serde::Serialize, Clone, Debug)]
+    #[serde(transparent)]
+    pub struct SignEndUserEvmTransactionCriteria(
+        pub ::std::vec::Vec<SignEndUserEvmTransactionCriteriaItem>,
+    );
+    impl ::std::ops::Deref for SignEndUserEvmTransactionCriteria {
+        type Target = ::std::vec::Vec<SignEndUserEvmTransactionCriteriaItem>;
+        fn deref(&self) -> &::std::vec::Vec<SignEndUserEvmTransactionCriteriaItem> {
+            &self.0
+        }
+    }
+    impl ::std::convert::From<SignEndUserEvmTransactionCriteria>
+        for ::std::vec::Vec<SignEndUserEvmTransactionCriteriaItem>
+    {
+        fn from(value: SignEndUserEvmTransactionCriteria) -> Self {
+            value.0
+        }
+    }
+    impl ::std::convert::From<&SignEndUserEvmTransactionCriteria>
+        for SignEndUserEvmTransactionCriteria
+    {
+        fn from(value: &SignEndUserEvmTransactionCriteria) -> Self {
+            value.clone()
+        }
+    }
+    impl ::std::convert::From<::std::vec::Vec<SignEndUserEvmTransactionCriteriaItem>>
+        for SignEndUserEvmTransactionCriteria
+    {
+        fn from(value: ::std::vec::Vec<SignEndUserEvmTransactionCriteriaItem>) -> Self {
+            Self(value)
+        }
+    }
+    ///`SignEndUserEvmTransactionCriteriaItem`
+    ///
+    /// <details><summary>JSON schema</summary>
+    ///
+    /// ```json
+    ///{
+    ///  "oneOf": [
+    ///    {
+    ///      "$ref": "#/components/schemas/EthValueCriterion"
+    ///    },
+    ///    {
+    ///      "$ref": "#/components/schemas/EvmAddressCriterion"
+    ///    },
+    ///    {
+    ///      "$ref": "#/components/schemas/EvmDataCriterion"
+    ///    },
+    ///    {
+    ///      "$ref": "#/components/schemas/NetUSDChangeCriterion"
+    ///    }
+    ///  ]
+    ///}
+    /// ```
+    /// </details>
+    #[derive(::serde::Deserialize, ::serde::Serialize, Clone, Debug)]
+    #[serde(untagged)]
+    pub enum SignEndUserEvmTransactionCriteriaItem {
+        EthValueCriterion(EthValueCriterion),
+        EvmAddressCriterion(EvmAddressCriterion),
+        EvmDataCriterion(EvmDataCriterion),
+        NetUsdChangeCriterion(NetUsdChangeCriterion),
+    }
+    impl ::std::convert::From<&Self> for SignEndUserEvmTransactionCriteriaItem {
+        fn from(value: &SignEndUserEvmTransactionCriteriaItem) -> Self {
+            value.clone()
+        }
+    }
+    impl ::std::convert::From<EthValueCriterion> for SignEndUserEvmTransactionCriteriaItem {
+        fn from(value: EthValueCriterion) -> Self {
+            Self::EthValueCriterion(value)
+        }
+    }
+    impl ::std::convert::From<EvmAddressCriterion> for SignEndUserEvmTransactionCriteriaItem {
+        fn from(value: EvmAddressCriterion) -> Self {
+            Self::EvmAddressCriterion(value)
+        }
+    }
+    impl ::std::convert::From<EvmDataCriterion> for SignEndUserEvmTransactionCriteriaItem {
+        fn from(value: EvmDataCriterion) -> Self {
+            Self::EvmDataCriterion(value)
+        }
+    }
+    impl ::std::convert::From<NetUsdChangeCriterion> for SignEndUserEvmTransactionCriteriaItem {
+        fn from(value: NetUsdChangeCriterion) -> Self {
+            Self::NetUsdChangeCriterion(value)
+        }
+    }
+    ///`SignEndUserEvmTransactionRule`
+    ///
+    /// <details><summary>JSON schema</summary>
+    ///
+    /// ```json
+    ///{
+    ///  "title": "SignEndUserEvmTransactionRule",
+    ///  "required": [
+    ///    "action",
+    ///    "criteria",
+    ///    "operation"
+    ///  ],
+    ///  "properties": {
+    ///    "action": {
+    ///      "description": "Whether matching the rule will cause the request to be rejected or accepted.",
+    ///      "examples": [
+    ///        "accept"
+    ///      ],
+    ///      "type": "string",
+    ///      "enum": [
+    ///        "reject",
+    ///        "accept"
+    ///      ]
+    ///    },
+    ///    "criteria": {
+    ///      "$ref": "#/components/schemas/SignEndUserEvmTransactionCriteria"
+    ///    },
+    ///    "operation": {
+    ///      "description": "The operation to which the rule applies. Every element of the `criteria` array must match the specified operation.",
+    ///      "examples": [
+    ///        "signEndUserEvmTransaction"
+    ///      ],
+    ///      "type": "string",
+    ///      "enum": [
+    ///        "signEndUserEvmTransaction"
+    ///      ]
+    ///    }
+    ///  },
+    ///  "x-audience": "public"
+    ///}
+    /// ```
+    /// </details>
+    #[derive(::serde::Deserialize, ::serde::Serialize, Clone, Debug)]
+    pub struct SignEndUserEvmTransactionRule {
+        ///Whether matching the rule will cause the request to be rejected or accepted.
+        pub action: SignEndUserEvmTransactionRuleAction,
+        pub criteria: SignEndUserEvmTransactionCriteria,
+        ///The operation to which the rule applies. Every element of the `criteria` array must match the specified operation.
+        pub operation: SignEndUserEvmTransactionRuleOperation,
+    }
+    impl ::std::convert::From<&SignEndUserEvmTransactionRule> for SignEndUserEvmTransactionRule {
+        fn from(value: &SignEndUserEvmTransactionRule) -> Self {
+            value.clone()
+        }
+    }
+    impl SignEndUserEvmTransactionRule {
+        pub fn builder() -> builder::SignEndUserEvmTransactionRule {
+            Default::default()
+        }
+    }
+    ///Whether matching the rule will cause the request to be rejected or accepted.
+    ///
+    /// <details><summary>JSON schema</summary>
+    ///
+    /// ```json
+    ///{
+    ///  "description": "Whether matching the rule will cause the request to be rejected or accepted.",
+    ///  "examples": [
+    ///    "accept"
+    ///  ],
+    ///  "type": "string",
+    ///  "enum": [
+    ///    "reject",
+    ///    "accept"
+    ///  ]
+    ///}
+    /// ```
+    /// </details>
+    #[derive(
+        ::serde::Deserialize,
+        ::serde::Serialize,
+        Clone,
+        Copy,
+        Debug,
+        Eq,
+        Hash,
+        Ord,
+        PartialEq,
+        PartialOrd,
+    )]
+    pub enum SignEndUserEvmTransactionRuleAction {
+        #[serde(rename = "reject")]
+        Reject,
+        #[serde(rename = "accept")]
+        Accept,
+    }
+    impl ::std::convert::From<&Self> for SignEndUserEvmTransactionRuleAction {
+        fn from(value: &SignEndUserEvmTransactionRuleAction) -> Self {
+            value.clone()
+        }
+    }
+    impl ::std::fmt::Display for SignEndUserEvmTransactionRuleAction {
+        fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
+            match *self {
+                Self::Reject => f.write_str("reject"),
+                Self::Accept => f.write_str("accept"),
+            }
+        }
+    }
+    impl ::std::str::FromStr for SignEndUserEvmTransactionRuleAction {
+        type Err = self::error::ConversionError;
+        fn from_str(value: &str) -> ::std::result::Result<Self, self::error::ConversionError> {
+            match value {
+                "reject" => Ok(Self::Reject),
+                "accept" => Ok(Self::Accept),
+                _ => Err("invalid value".into()),
+            }
+        }
+    }
+    impl ::std::convert::TryFrom<&str> for SignEndUserEvmTransactionRuleAction {
+        type Error = self::error::ConversionError;
+        fn try_from(value: &str) -> ::std::result::Result<Self, self::error::ConversionError> {
+            value.parse()
+        }
+    }
+    impl ::std::convert::TryFrom<&::std::string::String> for SignEndUserEvmTransactionRuleAction {
+        type Error = self::error::ConversionError;
+        fn try_from(
+            value: &::std::string::String,
+        ) -> ::std::result::Result<Self, self::error::ConversionError> {
+            value.parse()
+        }
+    }
+    impl ::std::convert::TryFrom<::std::string::String> for SignEndUserEvmTransactionRuleAction {
+        type Error = self::error::ConversionError;
+        fn try_from(
+            value: ::std::string::String,
+        ) -> ::std::result::Result<Self, self::error::ConversionError> {
+            value.parse()
+        }
+    }
+    ///The operation to which the rule applies. Every element of the `criteria` array must match the specified operation.
+    ///
+    /// <details><summary>JSON schema</summary>
+    ///
+    /// ```json
+    ///{
+    ///  "description": "The operation to which the rule applies. Every element of the `criteria` array must match the specified operation.",
+    ///  "examples": [
+    ///    "signEndUserEvmTransaction"
+    ///  ],
+    ///  "type": "string",
+    ///  "enum": [
+    ///    "signEndUserEvmTransaction"
+    ///  ]
+    ///}
+    /// ```
+    /// </details>
+    #[derive(
+        ::serde::Deserialize,
+        ::serde::Serialize,
+        Clone,
+        Copy,
+        Debug,
+        Eq,
+        Hash,
+        Ord,
+        PartialEq,
+        PartialOrd,
+    )]
+    pub enum SignEndUserEvmTransactionRuleOperation {
+        #[serde(rename = "signEndUserEvmTransaction")]
+        SignEndUserEvmTransaction,
+    }
+    impl ::std::convert::From<&Self> for SignEndUserEvmTransactionRuleOperation {
+        fn from(value: &SignEndUserEvmTransactionRuleOperation) -> Self {
+            value.clone()
+        }
+    }
+    impl ::std::fmt::Display for SignEndUserEvmTransactionRuleOperation {
+        fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
+            match *self {
+                Self::SignEndUserEvmTransaction => f.write_str("signEndUserEvmTransaction"),
+            }
+        }
+    }
+    impl ::std::str::FromStr for SignEndUserEvmTransactionRuleOperation {
+        type Err = self::error::ConversionError;
+        fn from_str(value: &str) -> ::std::result::Result<Self, self::error::ConversionError> {
+            match value {
+                "signEndUserEvmTransaction" => Ok(Self::SignEndUserEvmTransaction),
+                _ => Err("invalid value".into()),
+            }
+        }
+    }
+    impl ::std::convert::TryFrom<&str> for SignEndUserEvmTransactionRuleOperation {
+        type Error = self::error::ConversionError;
+        fn try_from(value: &str) -> ::std::result::Result<Self, self::error::ConversionError> {
+            value.parse()
+        }
+    }
+    impl ::std::convert::TryFrom<&::std::string::String> for SignEndUserEvmTransactionRuleOperation {
+        type Error = self::error::ConversionError;
+        fn try_from(
+            value: &::std::string::String,
+        ) -> ::std::result::Result<Self, self::error::ConversionError> {
+            value.parse()
+        }
+    }
+    impl ::std::convert::TryFrom<::std::string::String> for SignEndUserEvmTransactionRuleOperation {
+        type Error = self::error::ConversionError;
+        fn try_from(
+            value: ::std::string::String,
+        ) -> ::std::result::Result<Self, self::error::ConversionError> {
+            value.parse()
+        }
+    }
+    ///A schema for specifying criteria for the signEndUserEvmTypedData operation.
+    ///
+    /// <details><summary>JSON schema</summary>
+    ///
+    /// ```json
+    ///{
+    ///  "description": "A schema for specifying criteria for the signEndUserEvmTypedData operation.",
+    ///  "examples": [
+    ///    [
+    ///      {
+    ///        "conditions": [
+    ///          {
+    ///            "addresses": [
+    ///              "0x742d35Cc6634C0532925a3b844Bc454e4438f44e"
+    ///            ],
+    ///            "operator": "in",
+    ///            "path": "to.wallet"
+    ///          },
+    ///          {
+    ///            "operator": ">=",
+    ///            "path": "to.score",
+    ///            "value": "50"
+    ///          },
+    ///          {
+    ///            "match": "^hello ([a-z]+)$",
+    ///            "path": "contents"
+    ///          }
+    ///        ],
+    ///        "type": "evmTypedDataField",
+    ///        "types": {
+    ///          "primaryType": "Mail",
+    ///          "types": {
+    ///            "Mail": [
+    ///              {
+    ///                "name": "from",
+    ///                "type": "Person"
+    ///              },
+    ///              {
+    ///                "name": "to",
+    ///                "type": "Person"
+    ///              },
+    ///              {
+    ///                "name": "contents",
+    ///                "type": "string"
+    ///              }
+    ///            ],
+    ///            "Person": [
+    ///              {
+    ///                "name": "name",
+    ///                "type": "string"
+    ///              },
+    ///              {
+    ///                "name": "wallet",
+    ///                "type": "address"
+    ///              },
+    ///              {
+    ///                "name": "score",
+    ///                "type": "uint256"
+    ///              }
+    ///            ]
+    ///          }
+    ///        }
+    ///      },
+    ///      {
+    ///        "addresses": [
+    ///          "0x742d35Cc6634C0532925a3b844Bc454e4438f44e"
+    ///        ],
+    ///        "operator": "in",
+    ///        "type": "evmTypedDataVerifyingContract"
+    ///      }
+    ///    ]
+    ///  ],
+    ///  "type": "array",
+    ///  "items": {
+    ///    "oneOf": [
+    ///      {
+    ///        "$ref": "#/components/schemas/SignEvmTypedDataFieldCriterion"
+    ///      },
+    ///      {
+    ///        "$ref": "#/components/schemas/SignEvmTypedDataVerifyingContractCriterion"
+    ///      }
+    ///    ]
+    ///  },
+    ///  "x-audience": "public"
+    ///}
+    /// ```
+    /// </details>
+    #[derive(::serde::Deserialize, ::serde::Serialize, Clone, Debug)]
+    #[serde(transparent)]
+    pub struct SignEndUserEvmTypedDataCriteria(
+        pub ::std::vec::Vec<SignEndUserEvmTypedDataCriteriaItem>,
+    );
+    impl ::std::ops::Deref for SignEndUserEvmTypedDataCriteria {
+        type Target = ::std::vec::Vec<SignEndUserEvmTypedDataCriteriaItem>;
+        fn deref(&self) -> &::std::vec::Vec<SignEndUserEvmTypedDataCriteriaItem> {
+            &self.0
+        }
+    }
+    impl ::std::convert::From<SignEndUserEvmTypedDataCriteria>
+        for ::std::vec::Vec<SignEndUserEvmTypedDataCriteriaItem>
+    {
+        fn from(value: SignEndUserEvmTypedDataCriteria) -> Self {
+            value.0
+        }
+    }
+    impl ::std::convert::From<&SignEndUserEvmTypedDataCriteria> for SignEndUserEvmTypedDataCriteria {
+        fn from(value: &SignEndUserEvmTypedDataCriteria) -> Self {
+            value.clone()
+        }
+    }
+    impl ::std::convert::From<::std::vec::Vec<SignEndUserEvmTypedDataCriteriaItem>>
+        for SignEndUserEvmTypedDataCriteria
+    {
+        fn from(value: ::std::vec::Vec<SignEndUserEvmTypedDataCriteriaItem>) -> Self {
+            Self(value)
+        }
+    }
+    ///`SignEndUserEvmTypedDataCriteriaItem`
+    ///
+    /// <details><summary>JSON schema</summary>
+    ///
+    /// ```json
+    ///{
+    ///  "oneOf": [
+    ///    {
+    ///      "$ref": "#/components/schemas/SignEvmTypedDataFieldCriterion"
+    ///    },
+    ///    {
+    ///      "$ref": "#/components/schemas/SignEvmTypedDataVerifyingContractCriterion"
+    ///    }
+    ///  ]
+    ///}
+    /// ```
+    /// </details>
+    #[derive(::serde::Deserialize, ::serde::Serialize, Clone, Debug)]
+    #[serde(untagged)]
+    pub enum SignEndUserEvmTypedDataCriteriaItem {
+        FieldCriterion(SignEvmTypedDataFieldCriterion),
+        VerifyingContractCriterion(SignEvmTypedDataVerifyingContractCriterion),
+    }
+    impl ::std::convert::From<&Self> for SignEndUserEvmTypedDataCriteriaItem {
+        fn from(value: &SignEndUserEvmTypedDataCriteriaItem) -> Self {
+            value.clone()
+        }
+    }
+    impl ::std::convert::From<SignEvmTypedDataFieldCriterion> for SignEndUserEvmTypedDataCriteriaItem {
+        fn from(value: SignEvmTypedDataFieldCriterion) -> Self {
+            Self::FieldCriterion(value)
+        }
+    }
+    impl ::std::convert::From<SignEvmTypedDataVerifyingContractCriterion>
+        for SignEndUserEvmTypedDataCriteriaItem
+    {
+        fn from(value: SignEvmTypedDataVerifyingContractCriterion) -> Self {
+            Self::VerifyingContractCriterion(value)
+        }
+    }
+    ///`SignEndUserEvmTypedDataRule`
+    ///
+    /// <details><summary>JSON schema</summary>
+    ///
+    /// ```json
+    ///{
+    ///  "title": "SignEndUserEvmTypedDataRule",
+    ///  "required": [
+    ///    "action",
+    ///    "criteria",
+    ///    "operation"
+    ///  ],
+    ///  "properties": {
+    ///    "action": {
+    ///      "description": "Whether matching the rule will cause the request to be rejected or accepted.",
+    ///      "examples": [
+    ///        "accept"
+    ///      ],
+    ///      "type": "string",
+    ///      "enum": [
+    ///        "reject",
+    ///        "accept"
+    ///      ]
+    ///    },
+    ///    "criteria": {
+    ///      "$ref": "#/components/schemas/SignEndUserEvmTypedDataCriteria"
+    ///    },
+    ///    "operation": {
+    ///      "description": "The operation to which the rule applies. Every element of the `criteria` array must match the specified operation.",
+    ///      "examples": [
+    ///        "signEndUserEvmTypedData"
+    ///      ],
+    ///      "type": "string",
+    ///      "enum": [
+    ///        "signEndUserEvmTypedData"
+    ///      ]
+    ///    }
+    ///  },
+    ///  "x-audience": "public"
+    ///}
+    /// ```
+    /// </details>
+    #[derive(::serde::Deserialize, ::serde::Serialize, Clone, Debug)]
+    pub struct SignEndUserEvmTypedDataRule {
+        ///Whether matching the rule will cause the request to be rejected or accepted.
+        pub action: SignEndUserEvmTypedDataRuleAction,
+        pub criteria: SignEndUserEvmTypedDataCriteria,
+        ///The operation to which the rule applies. Every element of the `criteria` array must match the specified operation.
+        pub operation: SignEndUserEvmTypedDataRuleOperation,
+    }
+    impl ::std::convert::From<&SignEndUserEvmTypedDataRule> for SignEndUserEvmTypedDataRule {
+        fn from(value: &SignEndUserEvmTypedDataRule) -> Self {
+            value.clone()
+        }
+    }
+    impl SignEndUserEvmTypedDataRule {
+        pub fn builder() -> builder::SignEndUserEvmTypedDataRule {
+            Default::default()
+        }
+    }
+    ///Whether matching the rule will cause the request to be rejected or accepted.
+    ///
+    /// <details><summary>JSON schema</summary>
+    ///
+    /// ```json
+    ///{
+    ///  "description": "Whether matching the rule will cause the request to be rejected or accepted.",
+    ///  "examples": [
+    ///    "accept"
+    ///  ],
+    ///  "type": "string",
+    ///  "enum": [
+    ///    "reject",
+    ///    "accept"
+    ///  ]
+    ///}
+    /// ```
+    /// </details>
+    #[derive(
+        ::serde::Deserialize,
+        ::serde::Serialize,
+        Clone,
+        Copy,
+        Debug,
+        Eq,
+        Hash,
+        Ord,
+        PartialEq,
+        PartialOrd,
+    )]
+    pub enum SignEndUserEvmTypedDataRuleAction {
+        #[serde(rename = "reject")]
+        Reject,
+        #[serde(rename = "accept")]
+        Accept,
+    }
+    impl ::std::convert::From<&Self> for SignEndUserEvmTypedDataRuleAction {
+        fn from(value: &SignEndUserEvmTypedDataRuleAction) -> Self {
+            value.clone()
+        }
+    }
+    impl ::std::fmt::Display for SignEndUserEvmTypedDataRuleAction {
+        fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
+            match *self {
+                Self::Reject => f.write_str("reject"),
+                Self::Accept => f.write_str("accept"),
+            }
+        }
+    }
+    impl ::std::str::FromStr for SignEndUserEvmTypedDataRuleAction {
+        type Err = self::error::ConversionError;
+        fn from_str(value: &str) -> ::std::result::Result<Self, self::error::ConversionError> {
+            match value {
+                "reject" => Ok(Self::Reject),
+                "accept" => Ok(Self::Accept),
+                _ => Err("invalid value".into()),
+            }
+        }
+    }
+    impl ::std::convert::TryFrom<&str> for SignEndUserEvmTypedDataRuleAction {
+        type Error = self::error::ConversionError;
+        fn try_from(value: &str) -> ::std::result::Result<Self, self::error::ConversionError> {
+            value.parse()
+        }
+    }
+    impl ::std::convert::TryFrom<&::std::string::String> for SignEndUserEvmTypedDataRuleAction {
+        type Error = self::error::ConversionError;
+        fn try_from(
+            value: &::std::string::String,
+        ) -> ::std::result::Result<Self, self::error::ConversionError> {
+            value.parse()
+        }
+    }
+    impl ::std::convert::TryFrom<::std::string::String> for SignEndUserEvmTypedDataRuleAction {
+        type Error = self::error::ConversionError;
+        fn try_from(
+            value: ::std::string::String,
+        ) -> ::std::result::Result<Self, self::error::ConversionError> {
+            value.parse()
+        }
+    }
+    ///The operation to which the rule applies. Every element of the `criteria` array must match the specified operation.
+    ///
+    /// <details><summary>JSON schema</summary>
+    ///
+    /// ```json
+    ///{
+    ///  "description": "The operation to which the rule applies. Every element of the `criteria` array must match the specified operation.",
+    ///  "examples": [
+    ///    "signEndUserEvmTypedData"
+    ///  ],
+    ///  "type": "string",
+    ///  "enum": [
+    ///    "signEndUserEvmTypedData"
+    ///  ]
+    ///}
+    /// ```
+    /// </details>
+    #[derive(
+        ::serde::Deserialize,
+        ::serde::Serialize,
+        Clone,
+        Copy,
+        Debug,
+        Eq,
+        Hash,
+        Ord,
+        PartialEq,
+        PartialOrd,
+    )]
+    pub enum SignEndUserEvmTypedDataRuleOperation {
+        #[serde(rename = "signEndUserEvmTypedData")]
+        SignEndUserEvmTypedData,
+    }
+    impl ::std::convert::From<&Self> for SignEndUserEvmTypedDataRuleOperation {
+        fn from(value: &SignEndUserEvmTypedDataRuleOperation) -> Self {
+            value.clone()
+        }
+    }
+    impl ::std::fmt::Display for SignEndUserEvmTypedDataRuleOperation {
+        fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
+            match *self {
+                Self::SignEndUserEvmTypedData => f.write_str("signEndUserEvmTypedData"),
+            }
+        }
+    }
+    impl ::std::str::FromStr for SignEndUserEvmTypedDataRuleOperation {
+        type Err = self::error::ConversionError;
+        fn from_str(value: &str) -> ::std::result::Result<Self, self::error::ConversionError> {
+            match value {
+                "signEndUserEvmTypedData" => Ok(Self::SignEndUserEvmTypedData),
+                _ => Err("invalid value".into()),
+            }
+        }
+    }
+    impl ::std::convert::TryFrom<&str> for SignEndUserEvmTypedDataRuleOperation {
+        type Error = self::error::ConversionError;
+        fn try_from(value: &str) -> ::std::result::Result<Self, self::error::ConversionError> {
+            value.parse()
+        }
+    }
+    impl ::std::convert::TryFrom<&::std::string::String> for SignEndUserEvmTypedDataRuleOperation {
+        type Error = self::error::ConversionError;
+        fn try_from(
+            value: &::std::string::String,
+        ) -> ::std::result::Result<Self, self::error::ConversionError> {
+            value.parse()
+        }
+    }
+    impl ::std::convert::TryFrom<::std::string::String> for SignEndUserEvmTypedDataRuleOperation {
+        type Error = self::error::ConversionError;
+        fn try_from(
+            value: ::std::string::String,
+        ) -> ::std::result::Result<Self, self::error::ConversionError> {
+            value.parse()
+        }
+    }
+    ///A schema for specifying criteria for the signEndUserSolMessage operation.
+    ///
+    /// <details><summary>JSON schema</summary>
+    ///
+    /// ```json
+    ///{
+    ///  "description": "A schema for specifying criteria for the signEndUserSolMessage operation.",
+    ///  "examples": [
+    ///    [
+    ///      {
+    ///        "match": "^hello ([a-z]+)$",
+    ///        "type": "solMessage"
+    ///      }
+    ///    ]
+    ///  ],
+    ///  "type": "array",
+    ///  "items": {
+    ///    "oneOf": [
+    ///      {
+    ///        "$ref": "#/components/schemas/SolMessageCriterion"
+    ///      }
+    ///    ]
+    ///  },
+    ///  "x-audience": "public"
+    ///}
+    /// ```
+    /// </details>
+    #[derive(::serde::Deserialize, ::serde::Serialize, Clone, Debug)]
+    #[serde(transparent)]
+    pub struct SignEndUserSolMessageCriteria(pub ::std::vec::Vec<SolMessageCriterion>);
+    impl ::std::ops::Deref for SignEndUserSolMessageCriteria {
+        type Target = ::std::vec::Vec<SolMessageCriterion>;
+        fn deref(&self) -> &::std::vec::Vec<SolMessageCriterion> {
+            &self.0
+        }
+    }
+    impl ::std::convert::From<SignEndUserSolMessageCriteria> for ::std::vec::Vec<SolMessageCriterion> {
+        fn from(value: SignEndUserSolMessageCriteria) -> Self {
+            value.0
+        }
+    }
+    impl ::std::convert::From<&SignEndUserSolMessageCriteria> for SignEndUserSolMessageCriteria {
+        fn from(value: &SignEndUserSolMessageCriteria) -> Self {
+            value.clone()
+        }
+    }
+    impl ::std::convert::From<::std::vec::Vec<SolMessageCriterion>> for SignEndUserSolMessageCriteria {
+        fn from(value: ::std::vec::Vec<SolMessageCriterion>) -> Self {
+            Self(value)
+        }
+    }
+    ///`SignEndUserSolMessageRule`
+    ///
+    /// <details><summary>JSON schema</summary>
+    ///
+    /// ```json
+    ///{
+    ///  "title": "SignEndUserSolMessageRule",
+    ///  "required": [
+    ///    "action",
+    ///    "criteria",
+    ///    "operation"
+    ///  ],
+    ///  "properties": {
+    ///    "action": {
+    ///      "description": "Whether matching the rule will cause the request to be rejected or accepted.",
+    ///      "examples": [
+    ///        "accept"
+    ///      ],
+    ///      "type": "string",
+    ///      "enum": [
+    ///        "reject",
+    ///        "accept"
+    ///      ]
+    ///    },
+    ///    "criteria": {
+    ///      "$ref": "#/components/schemas/SignEndUserSolMessageCriteria"
+    ///    },
+    ///    "operation": {
+    ///      "description": "The operation to which the rule applies. Every element of the `criteria` array must match the specified operation.",
+    ///      "examples": [
+    ///        "signEndUserSolMessage"
+    ///      ],
+    ///      "type": "string",
+    ///      "enum": [
+    ///        "signEndUserSolMessage"
+    ///      ]
+    ///    }
+    ///  },
+    ///  "x-audience": "public"
+    ///}
+    /// ```
+    /// </details>
+    #[derive(::serde::Deserialize, ::serde::Serialize, Clone, Debug)]
+    pub struct SignEndUserSolMessageRule {
+        ///Whether matching the rule will cause the request to be rejected or accepted.
+        pub action: SignEndUserSolMessageRuleAction,
+        pub criteria: SignEndUserSolMessageCriteria,
+        ///The operation to which the rule applies. Every element of the `criteria` array must match the specified operation.
+        pub operation: SignEndUserSolMessageRuleOperation,
+    }
+    impl ::std::convert::From<&SignEndUserSolMessageRule> for SignEndUserSolMessageRule {
+        fn from(value: &SignEndUserSolMessageRule) -> Self {
+            value.clone()
+        }
+    }
+    impl SignEndUserSolMessageRule {
+        pub fn builder() -> builder::SignEndUserSolMessageRule {
+            Default::default()
+        }
+    }
+    ///Whether matching the rule will cause the request to be rejected or accepted.
+    ///
+    /// <details><summary>JSON schema</summary>
+    ///
+    /// ```json
+    ///{
+    ///  "description": "Whether matching the rule will cause the request to be rejected or accepted.",
+    ///  "examples": [
+    ///    "accept"
+    ///  ],
+    ///  "type": "string",
+    ///  "enum": [
+    ///    "reject",
+    ///    "accept"
+    ///  ]
+    ///}
+    /// ```
+    /// </details>
+    #[derive(
+        ::serde::Deserialize,
+        ::serde::Serialize,
+        Clone,
+        Copy,
+        Debug,
+        Eq,
+        Hash,
+        Ord,
+        PartialEq,
+        PartialOrd,
+    )]
+    pub enum SignEndUserSolMessageRuleAction {
+        #[serde(rename = "reject")]
+        Reject,
+        #[serde(rename = "accept")]
+        Accept,
+    }
+    impl ::std::convert::From<&Self> for SignEndUserSolMessageRuleAction {
+        fn from(value: &SignEndUserSolMessageRuleAction) -> Self {
+            value.clone()
+        }
+    }
+    impl ::std::fmt::Display for SignEndUserSolMessageRuleAction {
+        fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
+            match *self {
+                Self::Reject => f.write_str("reject"),
+                Self::Accept => f.write_str("accept"),
+            }
+        }
+    }
+    impl ::std::str::FromStr for SignEndUserSolMessageRuleAction {
+        type Err = self::error::ConversionError;
+        fn from_str(value: &str) -> ::std::result::Result<Self, self::error::ConversionError> {
+            match value {
+                "reject" => Ok(Self::Reject),
+                "accept" => Ok(Self::Accept),
+                _ => Err("invalid value".into()),
+            }
+        }
+    }
+    impl ::std::convert::TryFrom<&str> for SignEndUserSolMessageRuleAction {
+        type Error = self::error::ConversionError;
+        fn try_from(value: &str) -> ::std::result::Result<Self, self::error::ConversionError> {
+            value.parse()
+        }
+    }
+    impl ::std::convert::TryFrom<&::std::string::String> for SignEndUserSolMessageRuleAction {
+        type Error = self::error::ConversionError;
+        fn try_from(
+            value: &::std::string::String,
+        ) -> ::std::result::Result<Self, self::error::ConversionError> {
+            value.parse()
+        }
+    }
+    impl ::std::convert::TryFrom<::std::string::String> for SignEndUserSolMessageRuleAction {
+        type Error = self::error::ConversionError;
+        fn try_from(
+            value: ::std::string::String,
+        ) -> ::std::result::Result<Self, self::error::ConversionError> {
+            value.parse()
+        }
+    }
+    ///The operation to which the rule applies. Every element of the `criteria` array must match the specified operation.
+    ///
+    /// <details><summary>JSON schema</summary>
+    ///
+    /// ```json
+    ///{
+    ///  "description": "The operation to which the rule applies. Every element of the `criteria` array must match the specified operation.",
+    ///  "examples": [
+    ///    "signEndUserSolMessage"
+    ///  ],
+    ///  "type": "string",
+    ///  "enum": [
+    ///    "signEndUserSolMessage"
+    ///  ]
+    ///}
+    /// ```
+    /// </details>
+    #[derive(
+        ::serde::Deserialize,
+        ::serde::Serialize,
+        Clone,
+        Copy,
+        Debug,
+        Eq,
+        Hash,
+        Ord,
+        PartialEq,
+        PartialOrd,
+    )]
+    pub enum SignEndUserSolMessageRuleOperation {
+        #[serde(rename = "signEndUserSolMessage")]
+        SignEndUserSolMessage,
+    }
+    impl ::std::convert::From<&Self> for SignEndUserSolMessageRuleOperation {
+        fn from(value: &SignEndUserSolMessageRuleOperation) -> Self {
+            value.clone()
+        }
+    }
+    impl ::std::fmt::Display for SignEndUserSolMessageRuleOperation {
+        fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
+            match *self {
+                Self::SignEndUserSolMessage => f.write_str("signEndUserSolMessage"),
+            }
+        }
+    }
+    impl ::std::str::FromStr for SignEndUserSolMessageRuleOperation {
+        type Err = self::error::ConversionError;
+        fn from_str(value: &str) -> ::std::result::Result<Self, self::error::ConversionError> {
+            match value {
+                "signEndUserSolMessage" => Ok(Self::SignEndUserSolMessage),
+                _ => Err("invalid value".into()),
+            }
+        }
+    }
+    impl ::std::convert::TryFrom<&str> for SignEndUserSolMessageRuleOperation {
+        type Error = self::error::ConversionError;
+        fn try_from(value: &str) -> ::std::result::Result<Self, self::error::ConversionError> {
+            value.parse()
+        }
+    }
+    impl ::std::convert::TryFrom<&::std::string::String> for SignEndUserSolMessageRuleOperation {
+        type Error = self::error::ConversionError;
+        fn try_from(
+            value: &::std::string::String,
+        ) -> ::std::result::Result<Self, self::error::ConversionError> {
+            value.parse()
+        }
+    }
+    impl ::std::convert::TryFrom<::std::string::String> for SignEndUserSolMessageRuleOperation {
+        type Error = self::error::ConversionError;
+        fn try_from(
+            value: ::std::string::String,
+        ) -> ::std::result::Result<Self, self::error::ConversionError> {
+            value.parse()
+        }
+    }
+    ///A schema for specifying criteria for the signEndUserSolTransaction operation.
+    ///
+    /// <details><summary>JSON schema</summary>
+    ///
+    /// ```json
+    ///{
+    ///  "description": "A schema for specifying criteria for the signEndUserSolTransaction operation.",
+    ///  "examples": [
+    ///    [
+    ///      {
+    ///        "addresses": [
+    ///          "HpabPRRCFbBKSuJr5PdkVvQc85FyxyTWkFM2obBRSvHT"
+    ///        ],
+    ///        "operator": "in",
+    ///        "type": "solAddress"
+    ///      },
+    ///      {
+    ///        "operator": "<=",
+    ///        "solValue": "1000000000000000000",
+    ///        "type": "solValue"
+    ///      },
+    ///      {
+    ///        "addresses": [
+    ///          "HpabPRRCFbBKSuJr5PdkVvQc85FyxyTWkFM2obBRSvHT"
+    ///        ],
+    ///        "operator": "in",
+    ///        "type": "splAddress"
+    ///      },
+    ///      {
+    ///        "operator": "<=",
+    ///        "splValue": "1000000000000000000",
+    ///        "type": "splValue"
+    ///      },
+    ///      {
+    ///        "addresses": [
+    ///          "HpabPRRCFbBKSuJr5PdkVvQc85FyxyTWkFM2obBRSvHT"
+    ///        ],
+    ///        "operator": "in",
+    ///        "type": "mintAddress"
+    ///      },
+    ///      {
+    ///        "conditions": [
+    ///          {
+    ///            "instruction": "transfer_checked",
+    ///            "params": [
+    ///              {
+    ///                "name": "lamports",
+    ///                "operator": "<=",
+    ///                "value": "1000000"
+    ///              }
+    ///            ]
+    ///          }
+    ///        ],
+    ///        "idls": [
+    ///          "SystemProgram"
+    ///        ],
+    ///        "type": "solData"
+    ///      },
+    ///      {
+    ///        "operator": "in",
+    ///        "programIds": [
+    ///          "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
+    ///        ],
+    ///        "type": "programId"
+    ///      }
+    ///    ]
+    ///  ],
+    ///  "type": "array",
+    ///  "items": {
+    ///    "oneOf": [
+    ///      {
+    ///        "$ref": "#/components/schemas/SolAddressCriterion"
+    ///      },
+    ///      {
+    ///        "$ref": "#/components/schemas/SolValueCriterion"
+    ///      },
+    ///      {
+    ///        "$ref": "#/components/schemas/SplAddressCriterion"
+    ///      },
+    ///      {
+    ///        "$ref": "#/components/schemas/SplValueCriterion"
+    ///      },
+    ///      {
+    ///        "$ref": "#/components/schemas/MintAddressCriterion"
+    ///      },
+    ///      {
+    ///        "$ref": "#/components/schemas/SolDataCriterion"
+    ///      },
+    ///      {
+    ///        "$ref": "#/components/schemas/ProgramIdCriterion"
+    ///      }
+    ///    ]
+    ///  },
+    ///  "x-audience": "public"
+    ///}
+    /// ```
+    /// </details>
+    #[derive(::serde::Deserialize, ::serde::Serialize, Clone, Debug)]
+    #[serde(transparent)]
+    pub struct SignEndUserSolTransactionCriteria(
+        pub ::std::vec::Vec<SignEndUserSolTransactionCriteriaItem>,
+    );
+    impl ::std::ops::Deref for SignEndUserSolTransactionCriteria {
+        type Target = ::std::vec::Vec<SignEndUserSolTransactionCriteriaItem>;
+        fn deref(&self) -> &::std::vec::Vec<SignEndUserSolTransactionCriteriaItem> {
+            &self.0
+        }
+    }
+    impl ::std::convert::From<SignEndUserSolTransactionCriteria>
+        for ::std::vec::Vec<SignEndUserSolTransactionCriteriaItem>
+    {
+        fn from(value: SignEndUserSolTransactionCriteria) -> Self {
+            value.0
+        }
+    }
+    impl ::std::convert::From<&SignEndUserSolTransactionCriteria>
+        for SignEndUserSolTransactionCriteria
+    {
+        fn from(value: &SignEndUserSolTransactionCriteria) -> Self {
+            value.clone()
+        }
+    }
+    impl ::std::convert::From<::std::vec::Vec<SignEndUserSolTransactionCriteriaItem>>
+        for SignEndUserSolTransactionCriteria
+    {
+        fn from(value: ::std::vec::Vec<SignEndUserSolTransactionCriteriaItem>) -> Self {
+            Self(value)
+        }
+    }
+    ///`SignEndUserSolTransactionCriteriaItem`
+    ///
+    /// <details><summary>JSON schema</summary>
+    ///
+    /// ```json
+    ///{
+    ///  "oneOf": [
+    ///    {
+    ///      "$ref": "#/components/schemas/SolAddressCriterion"
+    ///    },
+    ///    {
+    ///      "$ref": "#/components/schemas/SolValueCriterion"
+    ///    },
+    ///    {
+    ///      "$ref": "#/components/schemas/SplAddressCriterion"
+    ///    },
+    ///    {
+    ///      "$ref": "#/components/schemas/SplValueCriterion"
+    ///    },
+    ///    {
+    ///      "$ref": "#/components/schemas/MintAddressCriterion"
+    ///    },
+    ///    {
+    ///      "$ref": "#/components/schemas/SolDataCriterion"
+    ///    },
+    ///    {
+    ///      "$ref": "#/components/schemas/ProgramIdCriterion"
+    ///    }
+    ///  ]
+    ///}
+    /// ```
+    /// </details>
+    #[derive(::serde::Deserialize, ::serde::Serialize, Clone, Debug)]
+    #[serde(untagged)]
+    pub enum SignEndUserSolTransactionCriteriaItem {
+        SolAddressCriterion(SolAddressCriterion),
+        SolValueCriterion(SolValueCriterion),
+        SplAddressCriterion(SplAddressCriterion),
+        SplValueCriterion(SplValueCriterion),
+        MintAddressCriterion(MintAddressCriterion),
+        SolDataCriterion(SolDataCriterion),
+        ProgramIdCriterion(ProgramIdCriterion),
+    }
+    impl ::std::convert::From<&Self> for SignEndUserSolTransactionCriteriaItem {
+        fn from(value: &SignEndUserSolTransactionCriteriaItem) -> Self {
+            value.clone()
+        }
+    }
+    impl ::std::convert::From<SolAddressCriterion> for SignEndUserSolTransactionCriteriaItem {
+        fn from(value: SolAddressCriterion) -> Self {
+            Self::SolAddressCriterion(value)
+        }
+    }
+    impl ::std::convert::From<SolValueCriterion> for SignEndUserSolTransactionCriteriaItem {
+        fn from(value: SolValueCriterion) -> Self {
+            Self::SolValueCriterion(value)
+        }
+    }
+    impl ::std::convert::From<SplAddressCriterion> for SignEndUserSolTransactionCriteriaItem {
+        fn from(value: SplAddressCriterion) -> Self {
+            Self::SplAddressCriterion(value)
+        }
+    }
+    impl ::std::convert::From<SplValueCriterion> for SignEndUserSolTransactionCriteriaItem {
+        fn from(value: SplValueCriterion) -> Self {
+            Self::SplValueCriterion(value)
+        }
+    }
+    impl ::std::convert::From<MintAddressCriterion> for SignEndUserSolTransactionCriteriaItem {
+        fn from(value: MintAddressCriterion) -> Self {
+            Self::MintAddressCriterion(value)
+        }
+    }
+    impl ::std::convert::From<SolDataCriterion> for SignEndUserSolTransactionCriteriaItem {
+        fn from(value: SolDataCriterion) -> Self {
+            Self::SolDataCriterion(value)
+        }
+    }
+    impl ::std::convert::From<ProgramIdCriterion> for SignEndUserSolTransactionCriteriaItem {
+        fn from(value: ProgramIdCriterion) -> Self {
+            Self::ProgramIdCriterion(value)
+        }
+    }
+    ///`SignEndUserSolTransactionRule`
+    ///
+    /// <details><summary>JSON schema</summary>
+    ///
+    /// ```json
+    ///{
+    ///  "title": "SignEndUserSolTransactionRule",
+    ///  "required": [
+    ///    "action",
+    ///    "criteria",
+    ///    "operation"
+    ///  ],
+    ///  "properties": {
+    ///    "action": {
+    ///      "description": "Whether matching the rule will cause the request to be rejected or accepted.",
+    ///      "examples": [
+    ///        "accept"
+    ///      ],
+    ///      "type": "string",
+    ///      "enum": [
+    ///        "reject",
+    ///        "accept"
+    ///      ]
+    ///    },
+    ///    "criteria": {
+    ///      "$ref": "#/components/schemas/SignEndUserSolTransactionCriteria"
+    ///    },
+    ///    "operation": {
+    ///      "description": "The operation to which the rule applies. Every element of the `criteria` array must match the specified operation.",
+    ///      "examples": [
+    ///        "signEndUserSolTransaction"
+    ///      ],
+    ///      "type": "string",
+    ///      "enum": [
+    ///        "signEndUserSolTransaction"
+    ///      ]
+    ///    }
+    ///  },
+    ///  "x-audience": "public"
+    ///}
+    /// ```
+    /// </details>
+    #[derive(::serde::Deserialize, ::serde::Serialize, Clone, Debug)]
+    pub struct SignEndUserSolTransactionRule {
+        ///Whether matching the rule will cause the request to be rejected or accepted.
+        pub action: SignEndUserSolTransactionRuleAction,
+        pub criteria: SignEndUserSolTransactionCriteria,
+        ///The operation to which the rule applies. Every element of the `criteria` array must match the specified operation.
+        pub operation: SignEndUserSolTransactionRuleOperation,
+    }
+    impl ::std::convert::From<&SignEndUserSolTransactionRule> for SignEndUserSolTransactionRule {
+        fn from(value: &SignEndUserSolTransactionRule) -> Self {
+            value.clone()
+        }
+    }
+    impl SignEndUserSolTransactionRule {
+        pub fn builder() -> builder::SignEndUserSolTransactionRule {
+            Default::default()
+        }
+    }
+    ///Whether matching the rule will cause the request to be rejected or accepted.
+    ///
+    /// <details><summary>JSON schema</summary>
+    ///
+    /// ```json
+    ///{
+    ///  "description": "Whether matching the rule will cause the request to be rejected or accepted.",
+    ///  "examples": [
+    ///    "accept"
+    ///  ],
+    ///  "type": "string",
+    ///  "enum": [
+    ///    "reject",
+    ///    "accept"
+    ///  ]
+    ///}
+    /// ```
+    /// </details>
+    #[derive(
+        ::serde::Deserialize,
+        ::serde::Serialize,
+        Clone,
+        Copy,
+        Debug,
+        Eq,
+        Hash,
+        Ord,
+        PartialEq,
+        PartialOrd,
+    )]
+    pub enum SignEndUserSolTransactionRuleAction {
+        #[serde(rename = "reject")]
+        Reject,
+        #[serde(rename = "accept")]
+        Accept,
+    }
+    impl ::std::convert::From<&Self> for SignEndUserSolTransactionRuleAction {
+        fn from(value: &SignEndUserSolTransactionRuleAction) -> Self {
+            value.clone()
+        }
+    }
+    impl ::std::fmt::Display for SignEndUserSolTransactionRuleAction {
+        fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
+            match *self {
+                Self::Reject => f.write_str("reject"),
+                Self::Accept => f.write_str("accept"),
+            }
+        }
+    }
+    impl ::std::str::FromStr for SignEndUserSolTransactionRuleAction {
+        type Err = self::error::ConversionError;
+        fn from_str(value: &str) -> ::std::result::Result<Self, self::error::ConversionError> {
+            match value {
+                "reject" => Ok(Self::Reject),
+                "accept" => Ok(Self::Accept),
+                _ => Err("invalid value".into()),
+            }
+        }
+    }
+    impl ::std::convert::TryFrom<&str> for SignEndUserSolTransactionRuleAction {
+        type Error = self::error::ConversionError;
+        fn try_from(value: &str) -> ::std::result::Result<Self, self::error::ConversionError> {
+            value.parse()
+        }
+    }
+    impl ::std::convert::TryFrom<&::std::string::String> for SignEndUserSolTransactionRuleAction {
+        type Error = self::error::ConversionError;
+        fn try_from(
+            value: &::std::string::String,
+        ) -> ::std::result::Result<Self, self::error::ConversionError> {
+            value.parse()
+        }
+    }
+    impl ::std::convert::TryFrom<::std::string::String> for SignEndUserSolTransactionRuleAction {
+        type Error = self::error::ConversionError;
+        fn try_from(
+            value: ::std::string::String,
+        ) -> ::std::result::Result<Self, self::error::ConversionError> {
+            value.parse()
+        }
+    }
+    ///The operation to which the rule applies. Every element of the `criteria` array must match the specified operation.
+    ///
+    /// <details><summary>JSON schema</summary>
+    ///
+    /// ```json
+    ///{
+    ///  "description": "The operation to which the rule applies. Every element of the `criteria` array must match the specified operation.",
+    ///  "examples": [
+    ///    "signEndUserSolTransaction"
+    ///  ],
+    ///  "type": "string",
+    ///  "enum": [
+    ///    "signEndUserSolTransaction"
+    ///  ]
+    ///}
+    /// ```
+    /// </details>
+    #[derive(
+        ::serde::Deserialize,
+        ::serde::Serialize,
+        Clone,
+        Copy,
+        Debug,
+        Eq,
+        Hash,
+        Ord,
+        PartialEq,
+        PartialOrd,
+    )]
+    pub enum SignEndUserSolTransactionRuleOperation {
+        #[serde(rename = "signEndUserSolTransaction")]
+        SignEndUserSolTransaction,
+    }
+    impl ::std::convert::From<&Self> for SignEndUserSolTransactionRuleOperation {
+        fn from(value: &SignEndUserSolTransactionRuleOperation) -> Self {
+            value.clone()
+        }
+    }
+    impl ::std::fmt::Display for SignEndUserSolTransactionRuleOperation {
+        fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
+            match *self {
+                Self::SignEndUserSolTransaction => f.write_str("signEndUserSolTransaction"),
+            }
+        }
+    }
+    impl ::std::str::FromStr for SignEndUserSolTransactionRuleOperation {
+        type Err = self::error::ConversionError;
+        fn from_str(value: &str) -> ::std::result::Result<Self, self::error::ConversionError> {
+            match value {
+                "signEndUserSolTransaction" => Ok(Self::SignEndUserSolTransaction),
+                _ => Err("invalid value".into()),
+            }
+        }
+    }
+    impl ::std::convert::TryFrom<&str> for SignEndUserSolTransactionRuleOperation {
+        type Error = self::error::ConversionError;
+        fn try_from(value: &str) -> ::std::result::Result<Self, self::error::ConversionError> {
+            value.parse()
+        }
+    }
+    impl ::std::convert::TryFrom<&::std::string::String> for SignEndUserSolTransactionRuleOperation {
+        type Error = self::error::ConversionError;
+        fn try_from(
+            value: &::std::string::String,
+        ) -> ::std::result::Result<Self, self::error::ConversionError> {
+            value.parse()
+        }
+    }
+    impl ::std::convert::TryFrom<::std::string::String> for SignEndUserSolTransactionRuleOperation {
+        type Error = self::error::ConversionError;
+        fn try_from(
+            value: ::std::string::String,
+        ) -> ::std::result::Result<Self, self::error::ConversionError> {
+            value.parse()
         }
     }
     ///`SignEvmHashAddress`
@@ -47429,29 +50008,26 @@ pub mod types {
         }
         #[derive(Clone, Debug)]
         pub struct CreateEvmEip7702DelegationResponse {
-            transaction_hash: ::std::result::Result<
-                super::CreateEvmEip7702DelegationResponseTransactionHash,
-                ::std::string::String,
-            >,
+            delegation_operation_id: ::std::result::Result<::uuid::Uuid, ::std::string::String>,
         }
         impl ::std::default::Default for CreateEvmEip7702DelegationResponse {
             fn default() -> Self {
                 Self {
-                    transaction_hash: Err("no value supplied for transaction_hash".to_string()),
+                    delegation_operation_id: Err(
+                        "no value supplied for delegation_operation_id".to_string()
+                    ),
                 }
             }
         }
         impl CreateEvmEip7702DelegationResponse {
-            pub fn transaction_hash<T>(mut self, value: T) -> Self
+            pub fn delegation_operation_id<T>(mut self, value: T) -> Self
             where
-                T: ::std::convert::TryInto<
-                    super::CreateEvmEip7702DelegationResponseTransactionHash,
-                >,
+                T: ::std::convert::TryInto<::uuid::Uuid>,
                 T::Error: ::std::fmt::Display,
             {
-                self.transaction_hash = value.try_into().map_err(|e| {
+                self.delegation_operation_id = value.try_into().map_err(|e| {
                     format!(
-                        "error converting supplied value for transaction_hash: {}",
+                        "error converting supplied value for delegation_operation_id: {}",
                         e
                     )
                 });
@@ -47466,7 +50042,7 @@ pub mod types {
                 value: CreateEvmEip7702DelegationResponse,
             ) -> ::std::result::Result<Self, super::error::ConversionError> {
                 Ok(Self {
-                    transaction_hash: value.transaction_hash?,
+                    delegation_operation_id: value.delegation_operation_id?,
                 })
             }
         }
@@ -47475,7 +50051,7 @@ pub mod types {
         {
             fn from(value: super::CreateEvmEip7702DelegationResponse) -> Self {
                 Self {
-                    transaction_hash: Ok(value.transaction_hash),
+                    delegation_operation_id: Ok(value.delegation_operation_id),
                 }
             }
         }
@@ -50796,38 +53372,60 @@ pub mod types {
             }
         }
         #[derive(Clone, Debug)]
-        pub struct EvmEip7702DelegationStatus {
+        pub struct EvmEip7702DelegationOperation {
             delegate_address: ::std::result::Result<
-                ::std::option::Option<super::EvmEip7702DelegationStatusDelegateAddress>,
+                ::std::option::Option<super::EvmEip7702DelegationOperationDelegateAddress>,
                 ::std::string::String,
             >,
+            delegation_operation_id: ::std::result::Result<::uuid::Uuid, ::std::string::String>,
             network:
                 ::std::result::Result<super::EvmEip7702DelegationNetwork, ::std::string::String>,
             status: ::std::result::Result<
-                super::EvmEip7702DelegationStatusStatus,
+                super::EvmEip7702DelegationOperationStatus,
+                ::std::string::String,
+            >,
+            transaction_hash: ::std::result::Result<
+                ::std::option::Option<super::EvmEip7702DelegationOperationTransactionHash>,
                 ::std::string::String,
             >,
         }
-        impl ::std::default::Default for EvmEip7702DelegationStatus {
+        impl ::std::default::Default for EvmEip7702DelegationOperation {
             fn default() -> Self {
                 Self {
                     delegate_address: Ok(Default::default()),
+                    delegation_operation_id: Err(
+                        "no value supplied for delegation_operation_id".to_string()
+                    ),
                     network: Err("no value supplied for network".to_string()),
                     status: Err("no value supplied for status".to_string()),
+                    transaction_hash: Ok(Default::default()),
                 }
             }
         }
-        impl EvmEip7702DelegationStatus {
+        impl EvmEip7702DelegationOperation {
             pub fn delegate_address<T>(mut self, value: T) -> Self
             where
                 T: ::std::convert::TryInto<
-                    ::std::option::Option<super::EvmEip7702DelegationStatusDelegateAddress>,
+                    ::std::option::Option<super::EvmEip7702DelegationOperationDelegateAddress>,
                 >,
                 T::Error: ::std::fmt::Display,
             {
                 self.delegate_address = value.try_into().map_err(|e| {
                     format!(
                         "error converting supplied value for delegate_address: {}",
+                        e
+                    )
+                });
+                self
+            }
+            pub fn delegation_operation_id<T>(mut self, value: T) -> Self
+            where
+                T: ::std::convert::TryInto<::uuid::Uuid>,
+                T::Error: ::std::fmt::Display,
+            {
+                self.delegation_operation_id = value.try_into().map_err(|e| {
+                    format!(
+                        "error converting supplied value for delegation_operation_id: {}",
                         e
                     )
                 });
@@ -50845,7 +53443,7 @@ pub mod types {
             }
             pub fn status<T>(mut self, value: T) -> Self
             where
-                T: ::std::convert::TryInto<super::EvmEip7702DelegationStatusStatus>,
+                T: ::std::convert::TryInto<super::EvmEip7702DelegationOperationStatus>,
                 T::Error: ::std::fmt::Display,
             {
                 self.status = value
@@ -50853,25 +53451,46 @@ pub mod types {
                     .map_err(|e| format!("error converting supplied value for status: {}", e));
                 self
             }
+            pub fn transaction_hash<T>(mut self, value: T) -> Self
+            where
+                T: ::std::convert::TryInto<
+                    ::std::option::Option<super::EvmEip7702DelegationOperationTransactionHash>,
+                >,
+                T::Error: ::std::fmt::Display,
+            {
+                self.transaction_hash = value.try_into().map_err(|e| {
+                    format!(
+                        "error converting supplied value for transaction_hash: {}",
+                        e
+                    )
+                });
+                self
+            }
         }
-        impl ::std::convert::TryFrom<EvmEip7702DelegationStatus> for super::EvmEip7702DelegationStatus {
+        impl ::std::convert::TryFrom<EvmEip7702DelegationOperation>
+            for super::EvmEip7702DelegationOperation
+        {
             type Error = super::error::ConversionError;
             fn try_from(
-                value: EvmEip7702DelegationStatus,
+                value: EvmEip7702DelegationOperation,
             ) -> ::std::result::Result<Self, super::error::ConversionError> {
                 Ok(Self {
                     delegate_address: value.delegate_address?,
+                    delegation_operation_id: value.delegation_operation_id?,
                     network: value.network?,
                     status: value.status?,
+                    transaction_hash: value.transaction_hash?,
                 })
             }
         }
-        impl ::std::convert::From<super::EvmEip7702DelegationStatus> for EvmEip7702DelegationStatus {
-            fn from(value: super::EvmEip7702DelegationStatus) -> Self {
+        impl ::std::convert::From<super::EvmEip7702DelegationOperation> for EvmEip7702DelegationOperation {
+            fn from(value: super::EvmEip7702DelegationOperation) -> Self {
                 Self {
                     delegate_address: Ok(value.delegate_address),
+                    delegation_operation_id: Ok(value.delegation_operation_id),
                     network: Ok(value.network),
                     status: Ok(value.status),
+                    transaction_hash: Ok(value.transaction_hash),
                 }
             }
         }
@@ -55886,6 +58505,164 @@ pub mod types {
             }
         }
         #[derive(Clone, Debug)]
+        pub struct SendEndUserEvmTransactionRule {
+            action: ::std::result::Result<
+                super::SendEndUserEvmTransactionRuleAction,
+                ::std::string::String,
+            >,
+            criteria: ::std::result::Result<
+                super::SendEndUserEvmTransactionCriteria,
+                ::std::string::String,
+            >,
+            operation: ::std::result::Result<
+                super::SendEndUserEvmTransactionRuleOperation,
+                ::std::string::String,
+            >,
+        }
+        impl ::std::default::Default for SendEndUserEvmTransactionRule {
+            fn default() -> Self {
+                Self {
+                    action: Err("no value supplied for action".to_string()),
+                    criteria: Err("no value supplied for criteria".to_string()),
+                    operation: Err("no value supplied for operation".to_string()),
+                }
+            }
+        }
+        impl SendEndUserEvmTransactionRule {
+            pub fn action<T>(mut self, value: T) -> Self
+            where
+                T: ::std::convert::TryInto<super::SendEndUserEvmTransactionRuleAction>,
+                T::Error: ::std::fmt::Display,
+            {
+                self.action = value
+                    .try_into()
+                    .map_err(|e| format!("error converting supplied value for action: {}", e));
+                self
+            }
+            pub fn criteria<T>(mut self, value: T) -> Self
+            where
+                T: ::std::convert::TryInto<super::SendEndUserEvmTransactionCriteria>,
+                T::Error: ::std::fmt::Display,
+            {
+                self.criteria = value
+                    .try_into()
+                    .map_err(|e| format!("error converting supplied value for criteria: {}", e));
+                self
+            }
+            pub fn operation<T>(mut self, value: T) -> Self
+            where
+                T: ::std::convert::TryInto<super::SendEndUserEvmTransactionRuleOperation>,
+                T::Error: ::std::fmt::Display,
+            {
+                self.operation = value
+                    .try_into()
+                    .map_err(|e| format!("error converting supplied value for operation: {}", e));
+                self
+            }
+        }
+        impl ::std::convert::TryFrom<SendEndUserEvmTransactionRule>
+            for super::SendEndUserEvmTransactionRule
+        {
+            type Error = super::error::ConversionError;
+            fn try_from(
+                value: SendEndUserEvmTransactionRule,
+            ) -> ::std::result::Result<Self, super::error::ConversionError> {
+                Ok(Self {
+                    action: value.action?,
+                    criteria: value.criteria?,
+                    operation: value.operation?,
+                })
+            }
+        }
+        impl ::std::convert::From<super::SendEndUserEvmTransactionRule> for SendEndUserEvmTransactionRule {
+            fn from(value: super::SendEndUserEvmTransactionRule) -> Self {
+                Self {
+                    action: Ok(value.action),
+                    criteria: Ok(value.criteria),
+                    operation: Ok(value.operation),
+                }
+            }
+        }
+        #[derive(Clone, Debug)]
+        pub struct SendEndUserSolTransactionRule {
+            action: ::std::result::Result<
+                super::SendEndUserSolTransactionRuleAction,
+                ::std::string::String,
+            >,
+            criteria: ::std::result::Result<
+                super::SendEndUserSolTransactionCriteria,
+                ::std::string::String,
+            >,
+            operation: ::std::result::Result<
+                super::SendEndUserSolTransactionRuleOperation,
+                ::std::string::String,
+            >,
+        }
+        impl ::std::default::Default for SendEndUserSolTransactionRule {
+            fn default() -> Self {
+                Self {
+                    action: Err("no value supplied for action".to_string()),
+                    criteria: Err("no value supplied for criteria".to_string()),
+                    operation: Err("no value supplied for operation".to_string()),
+                }
+            }
+        }
+        impl SendEndUserSolTransactionRule {
+            pub fn action<T>(mut self, value: T) -> Self
+            where
+                T: ::std::convert::TryInto<super::SendEndUserSolTransactionRuleAction>,
+                T::Error: ::std::fmt::Display,
+            {
+                self.action = value
+                    .try_into()
+                    .map_err(|e| format!("error converting supplied value for action: {}", e));
+                self
+            }
+            pub fn criteria<T>(mut self, value: T) -> Self
+            where
+                T: ::std::convert::TryInto<super::SendEndUserSolTransactionCriteria>,
+                T::Error: ::std::fmt::Display,
+            {
+                self.criteria = value
+                    .try_into()
+                    .map_err(|e| format!("error converting supplied value for criteria: {}", e));
+                self
+            }
+            pub fn operation<T>(mut self, value: T) -> Self
+            where
+                T: ::std::convert::TryInto<super::SendEndUserSolTransactionRuleOperation>,
+                T::Error: ::std::fmt::Display,
+            {
+                self.operation = value
+                    .try_into()
+                    .map_err(|e| format!("error converting supplied value for operation: {}", e));
+                self
+            }
+        }
+        impl ::std::convert::TryFrom<SendEndUserSolTransactionRule>
+            for super::SendEndUserSolTransactionRule
+        {
+            type Error = super::error::ConversionError;
+            fn try_from(
+                value: SendEndUserSolTransactionRule,
+            ) -> ::std::result::Result<Self, super::error::ConversionError> {
+                Ok(Self {
+                    action: value.action?,
+                    criteria: value.criteria?,
+                    operation: value.operation?,
+                })
+            }
+        }
+        impl ::std::convert::From<super::SendEndUserSolTransactionRule> for SendEndUserSolTransactionRule {
+            fn from(value: super::SendEndUserSolTransactionRule) -> Self {
+                Self {
+                    action: Ok(value.action),
+                    criteria: Ok(value.criteria),
+                    operation: Ok(value.operation),
+                }
+            }
+        }
+        #[derive(Clone, Debug)]
         pub struct SendEvmTransactionBody {
             network:
                 ::std::result::Result<super::SendEvmTransactionBodyNetwork, ::std::string::String>,
@@ -56537,6 +59314,391 @@ pub mod types {
                     payer: Ok(value.payer),
                     success: Ok(value.success),
                     transaction: Ok(value.transaction),
+                }
+            }
+        }
+        #[derive(Clone, Debug)]
+        pub struct SignEndUserEvmMessageRule {
+            action: ::std::result::Result<
+                super::SignEndUserEvmMessageRuleAction,
+                ::std::string::String,
+            >,
+            criteria:
+                ::std::result::Result<super::SignEndUserEvmMessageCriteria, ::std::string::String>,
+            operation: ::std::result::Result<
+                super::SignEndUserEvmMessageRuleOperation,
+                ::std::string::String,
+            >,
+        }
+        impl ::std::default::Default for SignEndUserEvmMessageRule {
+            fn default() -> Self {
+                Self {
+                    action: Err("no value supplied for action".to_string()),
+                    criteria: Err("no value supplied for criteria".to_string()),
+                    operation: Err("no value supplied for operation".to_string()),
+                }
+            }
+        }
+        impl SignEndUserEvmMessageRule {
+            pub fn action<T>(mut self, value: T) -> Self
+            where
+                T: ::std::convert::TryInto<super::SignEndUserEvmMessageRuleAction>,
+                T::Error: ::std::fmt::Display,
+            {
+                self.action = value
+                    .try_into()
+                    .map_err(|e| format!("error converting supplied value for action: {}", e));
+                self
+            }
+            pub fn criteria<T>(mut self, value: T) -> Self
+            where
+                T: ::std::convert::TryInto<super::SignEndUserEvmMessageCriteria>,
+                T::Error: ::std::fmt::Display,
+            {
+                self.criteria = value
+                    .try_into()
+                    .map_err(|e| format!("error converting supplied value for criteria: {}", e));
+                self
+            }
+            pub fn operation<T>(mut self, value: T) -> Self
+            where
+                T: ::std::convert::TryInto<super::SignEndUserEvmMessageRuleOperation>,
+                T::Error: ::std::fmt::Display,
+            {
+                self.operation = value
+                    .try_into()
+                    .map_err(|e| format!("error converting supplied value for operation: {}", e));
+                self
+            }
+        }
+        impl ::std::convert::TryFrom<SignEndUserEvmMessageRule> for super::SignEndUserEvmMessageRule {
+            type Error = super::error::ConversionError;
+            fn try_from(
+                value: SignEndUserEvmMessageRule,
+            ) -> ::std::result::Result<Self, super::error::ConversionError> {
+                Ok(Self {
+                    action: value.action?,
+                    criteria: value.criteria?,
+                    operation: value.operation?,
+                })
+            }
+        }
+        impl ::std::convert::From<super::SignEndUserEvmMessageRule> for SignEndUserEvmMessageRule {
+            fn from(value: super::SignEndUserEvmMessageRule) -> Self {
+                Self {
+                    action: Ok(value.action),
+                    criteria: Ok(value.criteria),
+                    operation: Ok(value.operation),
+                }
+            }
+        }
+        #[derive(Clone, Debug)]
+        pub struct SignEndUserEvmTransactionRule {
+            action: ::std::result::Result<
+                super::SignEndUserEvmTransactionRuleAction,
+                ::std::string::String,
+            >,
+            criteria: ::std::result::Result<
+                super::SignEndUserEvmTransactionCriteria,
+                ::std::string::String,
+            >,
+            operation: ::std::result::Result<
+                super::SignEndUserEvmTransactionRuleOperation,
+                ::std::string::String,
+            >,
+        }
+        impl ::std::default::Default for SignEndUserEvmTransactionRule {
+            fn default() -> Self {
+                Self {
+                    action: Err("no value supplied for action".to_string()),
+                    criteria: Err("no value supplied for criteria".to_string()),
+                    operation: Err("no value supplied for operation".to_string()),
+                }
+            }
+        }
+        impl SignEndUserEvmTransactionRule {
+            pub fn action<T>(mut self, value: T) -> Self
+            where
+                T: ::std::convert::TryInto<super::SignEndUserEvmTransactionRuleAction>,
+                T::Error: ::std::fmt::Display,
+            {
+                self.action = value
+                    .try_into()
+                    .map_err(|e| format!("error converting supplied value for action: {}", e));
+                self
+            }
+            pub fn criteria<T>(mut self, value: T) -> Self
+            where
+                T: ::std::convert::TryInto<super::SignEndUserEvmTransactionCriteria>,
+                T::Error: ::std::fmt::Display,
+            {
+                self.criteria = value
+                    .try_into()
+                    .map_err(|e| format!("error converting supplied value for criteria: {}", e));
+                self
+            }
+            pub fn operation<T>(mut self, value: T) -> Self
+            where
+                T: ::std::convert::TryInto<super::SignEndUserEvmTransactionRuleOperation>,
+                T::Error: ::std::fmt::Display,
+            {
+                self.operation = value
+                    .try_into()
+                    .map_err(|e| format!("error converting supplied value for operation: {}", e));
+                self
+            }
+        }
+        impl ::std::convert::TryFrom<SignEndUserEvmTransactionRule>
+            for super::SignEndUserEvmTransactionRule
+        {
+            type Error = super::error::ConversionError;
+            fn try_from(
+                value: SignEndUserEvmTransactionRule,
+            ) -> ::std::result::Result<Self, super::error::ConversionError> {
+                Ok(Self {
+                    action: value.action?,
+                    criteria: value.criteria?,
+                    operation: value.operation?,
+                })
+            }
+        }
+        impl ::std::convert::From<super::SignEndUserEvmTransactionRule> for SignEndUserEvmTransactionRule {
+            fn from(value: super::SignEndUserEvmTransactionRule) -> Self {
+                Self {
+                    action: Ok(value.action),
+                    criteria: Ok(value.criteria),
+                    operation: Ok(value.operation),
+                }
+            }
+        }
+        #[derive(Clone, Debug)]
+        pub struct SignEndUserEvmTypedDataRule {
+            action: ::std::result::Result<
+                super::SignEndUserEvmTypedDataRuleAction,
+                ::std::string::String,
+            >,
+            criteria: ::std::result::Result<
+                super::SignEndUserEvmTypedDataCriteria,
+                ::std::string::String,
+            >,
+            operation: ::std::result::Result<
+                super::SignEndUserEvmTypedDataRuleOperation,
+                ::std::string::String,
+            >,
+        }
+        impl ::std::default::Default for SignEndUserEvmTypedDataRule {
+            fn default() -> Self {
+                Self {
+                    action: Err("no value supplied for action".to_string()),
+                    criteria: Err("no value supplied for criteria".to_string()),
+                    operation: Err("no value supplied for operation".to_string()),
+                }
+            }
+        }
+        impl SignEndUserEvmTypedDataRule {
+            pub fn action<T>(mut self, value: T) -> Self
+            where
+                T: ::std::convert::TryInto<super::SignEndUserEvmTypedDataRuleAction>,
+                T::Error: ::std::fmt::Display,
+            {
+                self.action = value
+                    .try_into()
+                    .map_err(|e| format!("error converting supplied value for action: {}", e));
+                self
+            }
+            pub fn criteria<T>(mut self, value: T) -> Self
+            where
+                T: ::std::convert::TryInto<super::SignEndUserEvmTypedDataCriteria>,
+                T::Error: ::std::fmt::Display,
+            {
+                self.criteria = value
+                    .try_into()
+                    .map_err(|e| format!("error converting supplied value for criteria: {}", e));
+                self
+            }
+            pub fn operation<T>(mut self, value: T) -> Self
+            where
+                T: ::std::convert::TryInto<super::SignEndUserEvmTypedDataRuleOperation>,
+                T::Error: ::std::fmt::Display,
+            {
+                self.operation = value
+                    .try_into()
+                    .map_err(|e| format!("error converting supplied value for operation: {}", e));
+                self
+            }
+        }
+        impl ::std::convert::TryFrom<SignEndUserEvmTypedDataRule> for super::SignEndUserEvmTypedDataRule {
+            type Error = super::error::ConversionError;
+            fn try_from(
+                value: SignEndUserEvmTypedDataRule,
+            ) -> ::std::result::Result<Self, super::error::ConversionError> {
+                Ok(Self {
+                    action: value.action?,
+                    criteria: value.criteria?,
+                    operation: value.operation?,
+                })
+            }
+        }
+        impl ::std::convert::From<super::SignEndUserEvmTypedDataRule> for SignEndUserEvmTypedDataRule {
+            fn from(value: super::SignEndUserEvmTypedDataRule) -> Self {
+                Self {
+                    action: Ok(value.action),
+                    criteria: Ok(value.criteria),
+                    operation: Ok(value.operation),
+                }
+            }
+        }
+        #[derive(Clone, Debug)]
+        pub struct SignEndUserSolMessageRule {
+            action: ::std::result::Result<
+                super::SignEndUserSolMessageRuleAction,
+                ::std::string::String,
+            >,
+            criteria:
+                ::std::result::Result<super::SignEndUserSolMessageCriteria, ::std::string::String>,
+            operation: ::std::result::Result<
+                super::SignEndUserSolMessageRuleOperation,
+                ::std::string::String,
+            >,
+        }
+        impl ::std::default::Default for SignEndUserSolMessageRule {
+            fn default() -> Self {
+                Self {
+                    action: Err("no value supplied for action".to_string()),
+                    criteria: Err("no value supplied for criteria".to_string()),
+                    operation: Err("no value supplied for operation".to_string()),
+                }
+            }
+        }
+        impl SignEndUserSolMessageRule {
+            pub fn action<T>(mut self, value: T) -> Self
+            where
+                T: ::std::convert::TryInto<super::SignEndUserSolMessageRuleAction>,
+                T::Error: ::std::fmt::Display,
+            {
+                self.action = value
+                    .try_into()
+                    .map_err(|e| format!("error converting supplied value for action: {}", e));
+                self
+            }
+            pub fn criteria<T>(mut self, value: T) -> Self
+            where
+                T: ::std::convert::TryInto<super::SignEndUserSolMessageCriteria>,
+                T::Error: ::std::fmt::Display,
+            {
+                self.criteria = value
+                    .try_into()
+                    .map_err(|e| format!("error converting supplied value for criteria: {}", e));
+                self
+            }
+            pub fn operation<T>(mut self, value: T) -> Self
+            where
+                T: ::std::convert::TryInto<super::SignEndUserSolMessageRuleOperation>,
+                T::Error: ::std::fmt::Display,
+            {
+                self.operation = value
+                    .try_into()
+                    .map_err(|e| format!("error converting supplied value for operation: {}", e));
+                self
+            }
+        }
+        impl ::std::convert::TryFrom<SignEndUserSolMessageRule> for super::SignEndUserSolMessageRule {
+            type Error = super::error::ConversionError;
+            fn try_from(
+                value: SignEndUserSolMessageRule,
+            ) -> ::std::result::Result<Self, super::error::ConversionError> {
+                Ok(Self {
+                    action: value.action?,
+                    criteria: value.criteria?,
+                    operation: value.operation?,
+                })
+            }
+        }
+        impl ::std::convert::From<super::SignEndUserSolMessageRule> for SignEndUserSolMessageRule {
+            fn from(value: super::SignEndUserSolMessageRule) -> Self {
+                Self {
+                    action: Ok(value.action),
+                    criteria: Ok(value.criteria),
+                    operation: Ok(value.operation),
+                }
+            }
+        }
+        #[derive(Clone, Debug)]
+        pub struct SignEndUserSolTransactionRule {
+            action: ::std::result::Result<
+                super::SignEndUserSolTransactionRuleAction,
+                ::std::string::String,
+            >,
+            criteria: ::std::result::Result<
+                super::SignEndUserSolTransactionCriteria,
+                ::std::string::String,
+            >,
+            operation: ::std::result::Result<
+                super::SignEndUserSolTransactionRuleOperation,
+                ::std::string::String,
+            >,
+        }
+        impl ::std::default::Default for SignEndUserSolTransactionRule {
+            fn default() -> Self {
+                Self {
+                    action: Err("no value supplied for action".to_string()),
+                    criteria: Err("no value supplied for criteria".to_string()),
+                    operation: Err("no value supplied for operation".to_string()),
+                }
+            }
+        }
+        impl SignEndUserSolTransactionRule {
+            pub fn action<T>(mut self, value: T) -> Self
+            where
+                T: ::std::convert::TryInto<super::SignEndUserSolTransactionRuleAction>,
+                T::Error: ::std::fmt::Display,
+            {
+                self.action = value
+                    .try_into()
+                    .map_err(|e| format!("error converting supplied value for action: {}", e));
+                self
+            }
+            pub fn criteria<T>(mut self, value: T) -> Self
+            where
+                T: ::std::convert::TryInto<super::SignEndUserSolTransactionCriteria>,
+                T::Error: ::std::fmt::Display,
+            {
+                self.criteria = value
+                    .try_into()
+                    .map_err(|e| format!("error converting supplied value for criteria: {}", e));
+                self
+            }
+            pub fn operation<T>(mut self, value: T) -> Self
+            where
+                T: ::std::convert::TryInto<super::SignEndUserSolTransactionRuleOperation>,
+                T::Error: ::std::fmt::Display,
+            {
+                self.operation = value
+                    .try_into()
+                    .map_err(|e| format!("error converting supplied value for operation: {}", e));
+                self
+            }
+        }
+        impl ::std::convert::TryFrom<SignEndUserSolTransactionRule>
+            for super::SignEndUserSolTransactionRule
+        {
+            type Error = super::error::ConversionError;
+            fn try_from(
+                value: SignEndUserSolTransactionRule,
+            ) -> ::std::result::Result<Self, super::error::ConversionError> {
+                Ok(Self {
+                    action: value.action?,
+                    criteria: value.criteria?,
+                    operation: value.operation?,
+                })
+            }
+        }
+        impl ::std::convert::From<super::SignEndUserSolTransactionRule> for SignEndUserSolTransactionRule {
+            fn from(value: super::SignEndUserSolTransactionRule) -> Self {
+                Self {
+                    action: Ok(value.action),
+                    criteria: Ok(value.criteria),
+                    operation: Ok(value.operation),
                 }
             }
         }
@@ -62986,25 +66148,6 @@ impl Client {
     pub fn update_evm_account(&self) -> builder::UpdateEvmAccount<'_> {
         builder::UpdateEvmAccount::new(self)
     }
-    /**Get EIP-7702 delegation status
-
-    Returns the current EIP-7702 delegation state for an EVM account. Used to check if an account has been upgraded with smart account capabilities or needs to be upgraded.
-
-    Sends a `GET` request to `/v2/evm/accounts/{address}/eip7702/delegation`
-
-    Arguments:
-    - `address`: The 0x-prefixed address of the EVM account.
-    - `network`: The network to query the delegation status on.
-    ```ignore
-    let response = client.get_evm_eip7702_delegation_status()
-        .address(address)
-        .network(network)
-        .send()
-        .await;
-    ```*/
-    pub fn get_evm_eip7702_delegation_status(&self) -> builder::GetEvmEip7702DelegationStatus<'_> {
-        builder::GetEvmEip7702DelegationStatus::new(self)
-    }
     /**Create EIP-7702 delegation
 
     Creates an EIP-7702 delegation for an EVM EOA account, upgrading it with smart account capabilities.
@@ -63245,6 +66388,25 @@ impl Client {
     ```*/
     pub fn sign_evm_typed_data(&self) -> builder::SignEvmTypedData<'_> {
         builder::SignEvmTypedData::new(self)
+    }
+    /**Get EIP-7702 delegation operation for an operationID
+
+    Returns the EIP-7702 delegation operation. Use the delegationOperationId returned by the Create EIP-7702 delegation endpoint to poll for operation completion.
+
+    Sends a `GET` request to `/v2/evm/eip7702/delegation-operations/{delegationOperationId}`
+
+    Arguments:
+    - `delegation_operation_id`: The unique identifier for the delegation operation.
+    ```ignore
+    let response = client.get_evm_eip7702_delegation_operation_by_id()
+        .delegation_operation_id(delegation_operation_id)
+        .send()
+        .await;
+    ```*/
+    pub fn get_evm_eip7702_delegation_operation_by_id(
+        &self,
+    ) -> builder::GetEvmEip7702DelegationOperationById<'_> {
+        builder::GetEvmEip7702DelegationOperationById::new(self)
     }
     /**Request funds on EVM test networks
 
@@ -64572,6 +67734,9 @@ pub mod builder {
                     ResponseValue::from_response(response).await?,
                 )),
                 429u16 => Err(Error::ErrorResponse(
+                    ResponseValue::from_response(response).await?,
+                )),
+                499u16 => Err(Error::ErrorResponse(
                     ResponseValue::from_response(response).await?,
                 )),
                 500u16 => Err(Error::ErrorResponse(
@@ -66786,104 +69951,6 @@ pub mod builder {
             }
         }
     }
-    /**Builder for [`Client::get_evm_eip7702_delegation_status`]
-
-    [`Client::get_evm_eip7702_delegation_status`]: super::Client::get_evm_eip7702_delegation_status*/
-    #[derive(Debug, Clone)]
-    pub struct GetEvmEip7702DelegationStatus<'a> {
-        client: &'a super::Client,
-        address: Result<types::GetEvmEip7702DelegationStatusAddress, String>,
-        network: Result<types::EvmEip7702DelegationNetwork, String>,
-    }
-    impl<'a> GetEvmEip7702DelegationStatus<'a> {
-        pub fn new(client: &'a super::Client) -> Self {
-            Self {
-                client: client,
-                address: Err("address was not initialized".to_string()),
-                network: Err("network was not initialized".to_string()),
-            }
-        }
-        pub fn address<V>(mut self, value: V) -> Self
-        where
-            V: std::convert::TryInto<types::GetEvmEip7702DelegationStatusAddress>,
-        {
-            self.address = value.try_into().map_err(|_| {
-                "conversion to `GetEvmEip7702DelegationStatusAddress` for address failed"
-                    .to_string()
-            });
-            self
-        }
-        pub fn network<V>(mut self, value: V) -> Self
-        where
-            V: std::convert::TryInto<types::EvmEip7702DelegationNetwork>,
-        {
-            self.network = value.try_into().map_err(|_| {
-                "conversion to `EvmEip7702DelegationNetwork` for network failed".to_string()
-            });
-            self
-        }
-        ///Sends a `GET` request to `/v2/evm/accounts/{address}/eip7702/delegation`
-        pub async fn send(
-            self,
-        ) -> Result<ResponseValue<types::EvmEip7702DelegationStatus>, Error<types::Error>> {
-            let Self {
-                client,
-                address,
-                network,
-            } = self;
-            let address = address.map_err(Error::InvalidRequest)?;
-            let network = network.map_err(Error::InvalidRequest)?;
-            let url = format!(
-                "{}/v2/evm/accounts/{}/eip7702/delegation",
-                client.baseurl,
-                encode_path(&address.to_string()),
-            );
-            let mut header_map = ::reqwest::header::HeaderMap::with_capacity(1usize);
-            header_map.append(
-                ::reqwest::header::HeaderName::from_static("api-version"),
-                ::reqwest::header::HeaderValue::from_static(super::Client::api_version()),
-            );
-            #[allow(unused_mut)]
-            let mut request = client
-                .client
-                .get(url)
-                .header(
-                    ::reqwest::header::ACCEPT,
-                    ::reqwest::header::HeaderValue::from_static("application/json"),
-                )
-                .query(&progenitor_middleware_client::QueryParam::new(
-                    "network", &network,
-                ))
-                .headers(header_map)
-                .build()?;
-            let info = OperationInfo {
-                operation_id: "get_evm_eip7702_delegation_status",
-            };
-            client.pre(&mut request, &info).await?;
-            let result = client.exec(request, &info).await;
-            client.post(&result, &info).await?;
-            let response = result?;
-            match response.status().as_u16() {
-                200u16 => ResponseValue::from_response::<types::Error>(response).await,
-                400u16 => Err(Error::ErrorResponse(
-                    ResponseValue::from_response(response).await?,
-                )),
-                404u16 => Err(Error::ErrorResponse(
-                    ResponseValue::from_response(response).await?,
-                )),
-                500u16 => Err(Error::ErrorResponse(
-                    ResponseValue::from_response(response).await?,
-                )),
-                502u16 => Err(Error::ErrorResponse(
-                    ResponseValue::from_response(response).await?,
-                )),
-                503u16 => Err(Error::ErrorResponse(
-                    ResponseValue::from_response(response).await?,
-                )),
-                _ => Err(Error::UnexpectedResponse(response)),
-            }
-        }
-    }
     /**Builder for [`Client::create_evm_eip7702_delegation`]
 
     [`Client::create_evm_eip7702_delegation`]: super::Client::create_evm_eip7702_delegation*/
@@ -67931,6 +70998,90 @@ pub mod builder {
                     ResponseValue::from_response(response).await?,
                 )),
                 422u16 => Err(Error::ErrorResponse(
+                    ResponseValue::from_response(response).await?,
+                )),
+                500u16 => Err(Error::ErrorResponse(
+                    ResponseValue::from_response(response).await?,
+                )),
+                502u16 => Err(Error::ErrorResponse(
+                    ResponseValue::from_response(response).await?,
+                )),
+                503u16 => Err(Error::ErrorResponse(
+                    ResponseValue::from_response(response).await?,
+                )),
+                _ => Err(Error::UnexpectedResponse(response)),
+            }
+        }
+    }
+    /**Builder for [`Client::get_evm_eip7702_delegation_operation_by_id`]
+
+    [`Client::get_evm_eip7702_delegation_operation_by_id`]: super::Client::get_evm_eip7702_delegation_operation_by_id*/
+    #[derive(Debug, Clone)]
+    pub struct GetEvmEip7702DelegationOperationById<'a> {
+        client: &'a super::Client,
+        delegation_operation_id: Result<::uuid::Uuid, String>,
+    }
+    impl<'a> GetEvmEip7702DelegationOperationById<'a> {
+        pub fn new(client: &'a super::Client) -> Self {
+            Self {
+                client: client,
+                delegation_operation_id: Err(
+                    "delegation_operation_id was not initialized".to_string()
+                ),
+            }
+        }
+        pub fn delegation_operation_id<V>(mut self, value: V) -> Self
+        where
+            V: std::convert::TryInto<::uuid::Uuid>,
+        {
+            self.delegation_operation_id = value.try_into().map_err(|_| {
+                "conversion to `:: uuid :: Uuid` for delegation_operation_id failed".to_string()
+            });
+            self
+        }
+        ///Sends a `GET` request to `/v2/evm/eip7702/delegation-operations/{delegationOperationId}`
+        pub async fn send(
+            self,
+        ) -> Result<ResponseValue<types::EvmEip7702DelegationOperation>, Error<types::Error>>
+        {
+            let Self {
+                client,
+                delegation_operation_id,
+            } = self;
+            let delegation_operation_id = delegation_operation_id.map_err(Error::InvalidRequest)?;
+            let url = format!(
+                "{}/v2/evm/eip7702/delegation-operations/{}",
+                client.baseurl,
+                encode_path(&delegation_operation_id.to_string()),
+            );
+            let mut header_map = ::reqwest::header::HeaderMap::with_capacity(1usize);
+            header_map.append(
+                ::reqwest::header::HeaderName::from_static("api-version"),
+                ::reqwest::header::HeaderValue::from_static(super::Client::api_version()),
+            );
+            #[allow(unused_mut)]
+            let mut request = client
+                .client
+                .get(url)
+                .header(
+                    ::reqwest::header::ACCEPT,
+                    ::reqwest::header::HeaderValue::from_static("application/json"),
+                )
+                .headers(header_map)
+                .build()?;
+            let info = OperationInfo {
+                operation_id: "get_evm_eip7702_delegation_operation_by_id",
+            };
+            client.pre(&mut request, &info).await?;
+            let result = client.exec(request, &info).await;
+            client.post(&result, &info).await?;
+            let response = result?;
+            match response.status().as_u16() {
+                200u16 => ResponseValue::from_response::<types::Error>(response).await,
+                400u16 => Err(Error::ErrorResponse(
+                    ResponseValue::from_response(response).await?,
+                )),
+                404u16 => Err(Error::ErrorResponse(
                     ResponseValue::from_response(response).await?,
                 )),
                 500u16 => Err(Error::ErrorResponse(

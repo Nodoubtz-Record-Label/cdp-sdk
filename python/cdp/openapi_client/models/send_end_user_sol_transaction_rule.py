@@ -19,36 +19,32 @@ import re  # noqa: F401
 import json
 
 from pydantic import BaseModel, ConfigDict, Field, StrictStr, field_validator
-from typing import Any, ClassVar, Dict, List, Optional
-from typing_extensions import Annotated
-from cdp.openapi_client.models.evm_eip7702_delegation_network import EvmEip7702DelegationNetwork
+from typing import Any, ClassVar, Dict, List
+from cdp.openapi_client.models.send_sol_transaction_criteria_inner import SendSolTransactionCriteriaInner
 from typing import Optional, Set
 from typing_extensions import Self
 
-class EvmEip7702DelegationStatus(BaseModel):
+class SendEndUserSolTransactionRule(BaseModel):
     """
-    The EIP-7702 delegation status for an EVM account.
+    SendEndUserSolTransactionRule
     """ # noqa: E501
-    status: StrictStr = Field(description="The current delegation state of the account. CURRENT means the account is fully delegated and initialized. NOT_DELEGATED means the account has no active EIP-7702 delegation. WRONG_PROXY means the account is delegated to an unexpected proxy contract. NOT_INITIALIZED means the account is delegated to the correct proxy but has not been initialized.")
-    delegate_address: Optional[Annotated[str, Field(strict=True)]] = Field(default=None, description="The address the account has delegated to, if any. Only present when the account has an active delegation.", alias="delegateAddress")
-    network: EvmEip7702DelegationNetwork
-    __properties: ClassVar[List[str]] = ["status", "delegateAddress", "network"]
+    action: StrictStr = Field(description="Whether matching the rule will cause the request to be rejected or accepted.")
+    operation: StrictStr = Field(description="The operation to which the rule applies. Every element of the `criteria` array must match the specified operation.")
+    criteria: List[SendSolTransactionCriteriaInner] = Field(description="A schema for specifying criteria for the sendEndUserSolTransaction operation.")
+    __properties: ClassVar[List[str]] = ["action", "operation", "criteria"]
 
-    @field_validator('status')
-    def status_validate_enum(cls, value):
+    @field_validator('action')
+    def action_validate_enum(cls, value):
         """Validates the enum"""
-        if value not in set(['CURRENT', 'NOT_DELEGATED', 'WRONG_PROXY', 'NOT_INITIALIZED']):
-            raise ValueError("must be one of enum values ('CURRENT', 'NOT_DELEGATED', 'WRONG_PROXY', 'NOT_INITIALIZED')")
+        if value not in set(['reject', 'accept']):
+            raise ValueError("must be one of enum values ('reject', 'accept')")
         return value
 
-    @field_validator('delegate_address')
-    def delegate_address_validate_regular_expression(cls, value):
-        """Validates the regular expression"""
-        if value is None:
-            return value
-
-        if not re.match(r"^0x[0-9a-fA-F]{40}$", value):
-            raise ValueError(r"must validate the regular expression /^0x[0-9a-fA-F]{40}$/")
+    @field_validator('operation')
+    def operation_validate_enum(cls, value):
+        """Validates the enum"""
+        if value not in set(['sendEndUserSolTransaction']):
+            raise ValueError("must be one of enum values ('sendEndUserSolTransaction')")
         return value
 
     model_config = ConfigDict(
@@ -69,7 +65,7 @@ class EvmEip7702DelegationStatus(BaseModel):
 
     @classmethod
     def from_json(cls, json_str: str) -> Optional[Self]:
-        """Create an instance of EvmEip7702DelegationStatus from a JSON string"""
+        """Create an instance of SendEndUserSolTransactionRule from a JSON string"""
         return cls.from_dict(json.loads(json_str))
 
     def to_dict(self) -> Dict[str, Any]:
@@ -90,11 +86,18 @@ class EvmEip7702DelegationStatus(BaseModel):
             exclude=excluded_fields,
             exclude_none=True,
         )
+        # override the default output from pydantic by calling `to_dict()` of each item in criteria (list)
+        _items = []
+        if self.criteria:
+            for _item_criteria in self.criteria:
+                if _item_criteria:
+                    _items.append(_item_criteria.to_dict())
+            _dict['criteria'] = _items
         return _dict
 
     @classmethod
     def from_dict(cls, obj: Optional[Dict[str, Any]]) -> Optional[Self]:
-        """Create an instance of EvmEip7702DelegationStatus from a dict"""
+        """Create an instance of SendEndUserSolTransactionRule from a dict"""
         if obj is None:
             return None
 
@@ -102,9 +105,9 @@ class EvmEip7702DelegationStatus(BaseModel):
             return cls.model_validate(obj)
 
         _obj = cls.model_validate({
-            "status": obj.get("status"),
-            "delegateAddress": obj.get("delegateAddress"),
-            "network": obj.get("network")
+            "action": obj.get("action"),
+            "operation": obj.get("operation"),
+            "criteria": [SendSolTransactionCriteriaInner.from_dict(_item) for _item in obj["criteria"]] if obj.get("criteria") is not None else None
         })
         return _obj
 
