@@ -32,7 +32,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         .await?;
 
     let account = response.into_inner();
-    println!("✅ Created account: {}\n", &*account.address);
+    println!("✅ Created account.\n");
 
     // 1. Sign a hash
     println!("1. Signing a hash...");
