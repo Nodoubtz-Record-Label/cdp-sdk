@@ -95,7 +95,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let tx_response = client
         .sign_evm_transaction()
         .address(&*account.address)
-        .x_wallet_auth("")
+        .x_wallet_auth("YOUR_WALLET_AUTH_TOKEN_HERE") // TODO: Replace with a valid x-wallet-auth value in real usage.
         .body(tx_body)
         .send()
         .await?;
