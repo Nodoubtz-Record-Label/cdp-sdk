@@ -36,6 +36,9 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     // 1. Sign a hash
     println!("1. Signing a hash...");
+    // This is a hardcoded example hash used only for demonstration purposes.
+    // In a real application, compute the hash from the actual data you want to sign
+    // (for example, by hashing the message bytes with an appropriate hashing function).
     let hash_body = types::SignEvmHashBody::builder()
         .hash("0x1234567890123456789012345678901234567890123456789012345678901234");
 
@@ -95,7 +98,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let tx_response = client
         .sign_evm_transaction()
         .address(&*account.address)
-        .x_wallet_auth("")
+        .x_wallet_auth("YOUR_WALLET_AUTH_TOKEN_HERE") // TODO: Replace with a valid x-wallet-auth value in real usage.
         .body(tx_body)
         .send()
         .await?;
