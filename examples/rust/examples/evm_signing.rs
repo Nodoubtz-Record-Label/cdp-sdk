@@ -36,6 +36,9 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     // 1. Sign a hash
     println!("1. Signing a hash...");
+    // This is a hardcoded example hash used only for demonstration purposes.
+    // In a real application, compute the hash from the actual data you want to sign
+    // (for example, by hashing the message bytes with an appropriate hashing function).
     let hash_body = types::SignEvmHashBody::builder()
         .hash("0x1234567890123456789012345678901234567890123456789012345678901234");
 
